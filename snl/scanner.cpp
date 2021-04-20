@@ -245,7 +245,7 @@ void getTokenlist(void)
 
                 /* 当前字符c为空白(空格,制表符,换行符),字符存储标志save设置为FALSE *
                  * 当前字符为分隔符,不需要产生单词,无须存储                        */
-                else if ((c == ' ') || (c == '\t') || (c == '\n'))
+                else if ((c == ' ') || (c == '\t') || (c == '\n')|| (c == '\r'))
                     save = FALSE;
 
                 /* 当前字符c为左括号,字符存储标志save设置为FALSE     *

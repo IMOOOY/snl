@@ -48,7 +48,7 @@
 		66EF4072262E574500A71D81 /* scanner.h */ = {isa = PBXFileReference; fileEncoding = 2147486000; lastKnownFileType = sourcecode.c.h; path = scanner.h; sourceTree = "<group>"; };
 		66EF4073262E574500A71D81 /* parse.cpp */ = {isa = PBXFileReference; fileEncoding = 2147486000; lastKnownFileType = sourcecode.cpp.cpp; path = parse.cpp; sourceTree = "<group>"; };
 		66EF4074262E574500A71D81 /* parseLL1.h */ = {isa = PBXFileReference; fileEncoding = 2147486000; lastKnownFileType = sourcecode.c.h; path = parseLL1.h; sourceTree = "<group>"; };
-		66EF4075262E574500A71D81 /* symbTable.cpp */ = {isa = PBXFileReference; fileEncoding = 2147486000; lastKnownFileType = sourcecode.cpp.cpp; path = symbTable.cpp; sourceTree = "<group>"; };
+		66EF4075262E574500A71D81 /* symbTable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = symbTable.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */

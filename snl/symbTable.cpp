@@ -64,7 +64,7 @@ void   PrintFieldChain(fieldChain* currentP)
 void  PrintOneLayer(int level)
 {
 	SymbTable* t = scope[level];
-	fprintf(listing, "\n-------SymbTable  in level %d ---------\n", level);
+	fprintf(listing, "\n--level:%d --------------------------------\n", level);
 
 	while (t != NULL)
 	{ /*输出标识符名字*/
@@ -445,8 +445,11 @@ ParamTable* NewParam(void)
 /***********************************************************/
 void ErrorPrompt(int line, char* name, char* message)
 {
-	fprintf(listing, ">>>Line: %d, %s %s", line, name, message);
+	fprintf(listing, ">>>Line %d:, %s %s", line, name, message);
 	Error = TRUE;
+    fprintf(listing, "\n\n===================================================================\n");
+    fprintf(listing, "Program ends\n");
+    fprintf(listing, "===================================================================\n");
 	exit(0);
 }
 

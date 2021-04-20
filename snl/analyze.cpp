@@ -1017,10 +1017,10 @@ void analyze(TreeNode* t)
 
 	/*输出语义错误*/
 	if (Error == TRUE)
-		fprintf(listing, "\nanalyze error:\n");
+		fprintf(listing, "\n语义错误:\n");
 	/*如果无错误，则输出提示信息*/
-	else
-		fprintf(listing, "\n........ no error!\n");
+//	else
+//		fprintf(listing, "\n........ no error!\n");
 }
 
 
