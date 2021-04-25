@@ -12,17 +12,14 @@
 
 
 
-static void printTy(TypeIR* ty);
-static void printVar(SymbTable* entry);
-static void printProc(SymbTable* entry);
+//static void printTy(TypeIR* ty);
+//static void printVar(SymbTable* entry);
+//static void printProc(SymbTable* entry);
 //static void printTab(int tabnum);
 
 
 //MARK: - 符号表
-void CreatTable(void);
-void  DestroyTable();
-int  Enter(char* id, AttributeIR* attribP, SymbTable** entry);
-void  PrintOneLayer(int level);
+
 
 
 SymbTable* NewTable(void);
@@ -297,6 +294,9 @@ void   PrintSymbTable()
 
 //MARK: -
 
+
+
+
 /***********************************************************/
 /* 函数名 FindAtrr                                         */
 /* 功  能 属性查询                                         */
@@ -327,46 +327,6 @@ int   Compat(TypeIR* tp1, TypeIR* tp2)
     return present;
 }
 
-/***********************************************************/
-/* 函数名 NewTy                                               */
-/* 功  能 创建当前空类型内部表示                           */
-/* 说  明 参数为类型，函数返回该类型的内部表示的地址       */
-/***********************************************************/
-TypeIR* NewTy(TypeKind  kind)
-{
-    /* 内存中动态申请分配单元，
-       返回指向该单元的类型内部表示类型指针t */
-    TypeIR* table = (TypeIR*)malloc(sizeof(TypeIR));
-
-    /* 类型内部表示类型指针table为NULL,
-       未能成功分配内存单元将显示提示错误信息*/
-    if (table == NULL)
-    {
-        fprintf(listing, "Out of memory error !");
-        Error = TRUE;
-    }
-    /* 类型内部表示类型指针table不是NULL,内存单元已经成功分配 */
-    else
-        switch (kind)
-        {
-        case intTy:
-        case charTy:
-        case boolTy:
-            table->kind = kind;
-            table->size = 1;
-            break;
-        case arrayTy:
-            table->kind = arrayTy;
-            table->More.ArrayAttr.indexTy = NULL;
-            table->More.ArrayAttr.elemTy = NULL;
-            break;
-        case recordTy:
-            table->kind = recordTy;
-            table->More.body = NULL;
-            break;
-        }
-    return table;
-}
 
 /***********************************************************/
 /* 函数名 NewBody                                          */

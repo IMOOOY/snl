@@ -10,7 +10,7 @@
 #define _SYMBTABLE_H_
 
 SymbTable* NewTable(void);
-
+void  PrintOneLayer(int level);
 void CreatTable(void);
 
 void DestroyTable(void);

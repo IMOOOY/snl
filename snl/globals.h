@@ -103,10 +103,19 @@ typedef enum { ProK, PheadK, DecK, TypeK, VarK, ProcDecK, StmLK, StmtK, ExpK }
 NodeKind;
 
 
-/*声明类型Deckind 类型的枚举定义：
-  数组类型ArrayK,字符类型CharK,
-  整数类型IntegerK,记录类型RecordK,
-  以类型标识符作为类型的IdK*/
+/**
+ 声明类型Deckind 类型的枚举定义：
+ 
+ 数组类型ArrayK,
+ 
+ 字符类型CharK,
+  
+ 整数类型IntegerK,
+ 
+ 记录类型RecordK,
+  
+ 以类型标识符作为类型的IdK
+ */
 typedef enum { ArrayK, CharK, IntegerK, RecordK, IdK }  DecKind;
 
 
@@ -145,13 +154,71 @@ typedef enum { valparamType, varparamType } ParamType;
    /*提前声明符号表结构*/
 struct symbtable;
 
-/********** 语法树节点treeNode类型 *********/
+/**
+ @brief语法树节点treeNode类型
+ 
+ -  child[MAXCHILDREN] 子节点指针
+ 
+ -  sibling* 兄弟节点指针
+ 
+ -  lineno 源代码行号
+ 
+ -  nodekind 节点类型
+ 
+ -  kind 具体类型
+ 
+------DecKind dec;
+ 
+------StmtKind stmt;
+ 
+------ ExpKind exp;
+ 
+ - idnum       相同类型的变量个数
+ 
+ - name[10][10]      标识符的名称
+ 
+ - table[10]  与标志符对应的符号表地址，在语义分析阶段填入
+ 
+ -  attr 属性
+ 
+ ----ArrayAttr
+ 
+   ------------low     数组下界
+ 
+   ------------up         数组上界
+ 
+   ------------childtype   数组的子类型
+ 
+ ----ProcAttr     过程属性
+ 
+   ------------ ParamType paramt    过程的参数类型
+ 
+ ----  ExpAttr
+ 
+   ------------ LexType op     表达式的操作符
+ 
+   ------------val       表达式的值
+ 
+   ------------ VarKind varkind  变量的类别
+ 
+   ------------type  用于类型检查
+ 
+ ---- type_name[10]   类型名是标识符
+ */
 typedef struct treeNode
 
 {
-    struct treeNode* child[MAXCHILDREN];        /* 子节点指针    */
+    ///子节点指针
+    ///
+    ///子节点child[0]指向参数部分
+    ///
+    ///子节点child[1]指向声明体部分
+    ///
+    ///子节点child[2]指向函数的语句部分
+    struct treeNode* child[MAXCHILDREN];        /*    */
     struct treeNode* sibling;                    /* 兄弟节点指针    */
     int lineno;                                /* 源代码行号    */
+    ///语法树根节点ProK,程序头结点PheadK，声明类型节点DecK,标志子结点都是类型声明的结点TypeK,标志子结点都是变量声明的结点VarK,函数声明结点FuncDecK,语句序列节点StmLK,语句声明结点StmtK,表达式结点ExpK
     NodeKind nodekind;                            /* 节点类型        */
     union
     {
@@ -413,22 +480,49 @@ typedef struct fieldchain
 }fieldChain;
 
 
-///类型的内部结构定义
+/**
+ @brief类型的内部结构定义
+
+ size  类型所占空间大小
+ 
+ kind 节点类型
+ 
+ more
+ 
+ --ArrayAttr
+
+ -----indexTy       指向数组下标类型的内部表示
+
+ -----elemTy        指向数组元素类型的内部表示，即指向证书或字符
+
+ -----iow       记录数组类型的下界
+
+ -----up        记录数组类型的上界
+ 
+ --body     记录类型中的域链
+ */
 typedef   struct  typeIR
 {
-    int             size;   /*类型所占空间大小*/
+    ///类型所占空间大小
+    int             size;
+    ///intTy, charTy, arrayTy, recordTy, boolTy
     TypeKind        kind;
     union
     {
+        ///数组类型的内部表示的额外内容
         struct
         {
-            struct typeIR* indexTy; //指向数组下标类型的内部表示
-            struct typeIR* elemTy;  //指向数组元素类型的内部表示，即指向证书或字符
-            int    low;     //记录数组类型的下界
-            int    up;      //记录数组类型的上界
-        }ArrayAttr;         //数组类型的内部表示的额外内容
-        
-        fieldChain* body;  /*记录类型中的域链*/
+            ///指向数组下标类型的内部表示
+            struct typeIR* indexTy;
+            ///指向数组元素类型的内部表示，即指向证书或字符
+            struct typeIR* elemTy;
+            ///记录数组类型的下界
+            int    low;
+            ///记录数组类型的上界
+            int    up;
+        }ArrayAttr;
+        ///记录类型中的域链
+        fieldChain* body;  
     } More;
 }TypeIR;
 

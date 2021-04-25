@@ -30,14 +30,14 @@ TypeIR* recordVar(TreeNode* t);//该函数用于处理记录类型变量
 /// 语义分析主函数
 ///
 ///对语法树进行分析
-/// @param t <#t description#>
+/// @param t 语法树根节点
 void analyze(TreeNode* t)
 {
-    SymbTable* entry = NULL;
+//    SymbTable* entry = NULL;
     TreeNode* p = NULL;
-    TreeNode* pp = t;
+//    TreeNode* pp = t;
 
-//    创建符号表
+//    创建一层新的符号表
     CreatTable();
 
 //    调用类型内部表示初始化函数
@@ -47,23 +47,27 @@ void analyze(TreeNode* t)
     p = t->child[1];
     while (p != NULL)
     {
+        //只对含有变量标识符、类型标识符、和过程标识符的语法树节点进行处理
         switch (p->nodekind)
         {
         case  TypeK:     TypeDecPart(p->child[0]);  break;
+                //类型标识符
         case  VarK:     VarDecPart(p->child[0]);   break;
+                //变量标识符
         case  ProcDecK:  procDecPart(p);        break;
+                //过程标识符
         default:
-            ErrorPrompt(p->lineno, (char*)"", (char*)"no this node kind in syntax tree!");
+            ErrorPrompt(p->lineno, (char*)"", (char*)"节点类型不存在!");
             break;
         }
         p = p->sibling;
 //        循环处理
     }
 
-//    程序体
+//    声明体部分
     t = t->child[2];
     if (t->nodekind == StmLK)
-        Body(t);
+        Body(t);//处理语句序列
 
 //    撤销符号表
     if (Level != -1)
@@ -75,99 +79,124 @@ void analyze(TreeNode* t)
 }
 
 
-
-
-
-//MARK: - 类型处理
-///初始化整数类型，字符类型，布尔类型的内部表示
+//MARK:- 初始化基本类型内部表示函数initialize
+///初始化基本类型内部表示
 ///
-///三种类型均为基本类型，内部表示固定
+///初始化整数类型，字符类型，布尔类型的内部表示，三种类型均为基本类型，内部表示固定
 void initialize(void)
 {
     intPtr = NewTy(intTy);
-
     charPtr = NewTy(charTy);
-
     boolPtr = NewTy(boolTy);
-
     /*scope栈的各层指针设为空*/
     for (int i = 0; i < SCOPESIZE; i++)
         scope[i] = NULL;
 }
 
+/// 初始化当前空类型内部表示
+/// @param kind 类型
+/// @return 该类型的内部表示的地址
+TypeIR* NewTy(TypeKind  kind)
+{
+    TypeIR* table = (TypeIR*)malloc(sizeof(TypeIR));
+    if (table == NULL)
+    {
+        fprintf(listing, "内存溢出!");
+        Error = TRUE;
+    }
+    else
+    {
+        switch (kind)
+        {
+        case intTy:
+        case charTy:
+        case boolTy:
+            table->kind = kind;
+            table->size = 1;
+            break;
+        case arrayTy:
+            table->kind = arrayTy;
+            table->More.ArrayAttr.indexTy = NULL;
+            table->More.ArrayAttr.elemTy = NULL;
+            break;
+        case recordTy:
+            table->kind = recordTy;
+            table->More.body = NULL;
+            break;
+        }
+    }
+    return table;
+}
 
 
-/// 类型分析
+
+//MARK: - 类型处理
+
+
+/// 类型分析处理
 ///
-/// 处理语法树的当前结点类型。构造出当前类型的内部表示，并将其地址返回给Ptr类型内部表示的地址.
-/// @param t <#t description#>
-/// @param deckind <#deckind description#>
+/// 处理语法树的当前结点类型，构造出当前类型的内部表示。
+/// @param t 语法树节点
+/// @param deckind 类型
+/// @return 当前类型的内部表示的指针
 TypeIR* TypeProcess(TreeNode* t, DecKind deckind)
 {
     TypeIR* Ptr = NULL;
     switch (deckind)
     {
     case IdK:
-        Ptr = nameType(t); break;         /*类型为自定义标识符*/
+        Ptr = nameType(t); break;         /*类型为自定义标识符ID*/
     case ArrayK:
-        Ptr = arrayType(t); break;        /*类型为数组类型*/
+        Ptr = arrayType(t); break;        /*类型为数组*/
     case RecordK:
-        Ptr = recordType(t); break;       /*类型为记录类型*/
+        Ptr = recordType(t); break;       /*类型为记录*/
     case IntegerK:
-        Ptr = intPtr; break;              /*类型为整数类型*/
+        Ptr = intPtr; break;              /*类型为整数，直接返回整型指针*/
     case CharK:
-        Ptr = charPtr; break;             /*类型为字符类型*/
+        Ptr = charPtr; break;             /*类型为字符*/
     }
     return Ptr;
 }
 
 
-
-
-
-///在符号表中寻找已定义的类型名字
+///@brief自定义类型（标识符类型）内部结构分析函数
 ///
-///调用寻找表项地址函数FindEntry，返回找到的表项地址指针entry。
-///
-///如果present为FALSE，则发生无声明错误。
-///
-///如果符号表中的该标识符的属性信息不是类型，则非类型标识符。
-///
-///该函数返回指针指向符号表中的该标识符的类型内部表示。
-/// @param t <#t description#>
+///在符号表中寻找已定义的类型名字，调用寻找表项地址函数FindEntry，返回找到的表项地址指针entry。如果present为FALSE，则发生无声明错误。如果符号表中的该标识符的属性信息不是类型，则非类型标识符。
+/// @param t 语法树节点
+/// @return 符号表中的该标识符的类型内部表示。
 TypeIR* nameType(TreeNode* t)
 {
     TypeIR* Ptr = NULL;
     SymbTable* entry = NULL;
     int present;
 
-
 //    类型标识符也需要往前层查找
     present = FindEntry(t->attr.type_name, &entry);
+    //查找当前树节点标识符的符号表
 
     if (present == TRUE)
     {
 //        检查该标识符是否为类型标识符
         if (entry->attrIR.kind != typeKind)
-            ErrorPrompt(t->lineno, t->attr.type_name, (char*)"used before typed!\n");
+            ErrorPrompt(t->lineno, t->attr.type_name, (char*)"标识符未声明!\n");
         else
             Ptr = entry->attrIR.idtype;
     }
 //    没有找到该标识符
     else
     {
-        ErrorPrompt(t->lineno, t->attr.type_name, (char*)"type name is not declared!\n");
+        ErrorPrompt(t->lineno, t->attr.type_name, (char*)"没有找到标识符!\n");
     }
     return Ptr;
 }
 
 
 
-
-/// 处理数组类型的内部表示
+///@brief 数组类型内部表示处理函数
 ///
-/// 类型为数组类型时，需要检查下标是否合法。
-/// @param t <#t description#>
+/// 创建数组类型的内部表示，需要检查下标是否合法。
+/// @param t 语法树节点
+/// @return 符号表中的该标识符的类型内部表示。
 TypeIR* arrayType(TreeNode* t)
 {
     TypeIR* Ptr0 = NULL;
@@ -177,21 +206,22 @@ TypeIR* arrayType(TreeNode* t)
 //    检查数组上界是否小于下界
     if ((t->attr.ArrayAttr.low) > (t->attr.ArrayAttr.up))
     {
-        ErrorPrompt(t->lineno, (char *)"", (char*)"array subscript error!\n");
+        ErrorPrompt(t->lineno, (char *)"", (char*)"数组下标越界错误!\n");
         Error = TRUE;
     }
     else
     {
         Ptr0 = TypeProcess(t, IntegerK);
-//        调用类型分析函数，处理下标类型
+//        类型分析，处理下标类型（整数类型）
+        
         Ptr1 = TypeProcess(t, t->attr.ArrayAttr.childtype);
-//        调用类型分析函数，处理元素类型
+//        类型分析，处理元素类型
+        
         Ptr = NewTy(arrayTy);
-//        指向一新创建的类型信息表
+//        创建新的数组类型表
+        
         Ptr->size = ((t->attr.ArrayAttr.up) - (t->attr.ArrayAttr.low) + 1) * (Ptr1->size);
 //        计算本类型长度
-
-//        填写其他信息
         Ptr->More.ArrayAttr.indexTy = Ptr0;
         Ptr->More.ArrayAttr.elemTy = Ptr1;
         Ptr->More.ArrayAttr.low = t->attr.ArrayAttr.low;
@@ -204,33 +234,25 @@ TypeIR* arrayType(TreeNode* t)
 
 
 
-///处理记录类型的内部表示
+///@brief 处理记录类型的内部表示
 ///
-///类型为记录类型时，是由记录体组成的。
-///
-///其内部节点需要包括3个信息:
-///
-///一是空间大小size；
-///
-///二是类型种类标志 recordTy;
-///
-///三是体部分的节点地址body。
-///
-///记录类型中的域名都是标识符的定义性出现，因此需要记录其属性。
-/// @param t <#t description#>
+///类型为记录类型时，是由记录体组成的。其内部节点需要包括3个信息:一是空间大小size；二是类型种类标志 recordTy;三是体部分的节点地址body。记录类型中的域名都是标识符的定义性出现，因此需要记录其属性。
+/// @param t 语法树节点
+/// @return 符号表中的该标识符的类型内部表示。
 TypeIR* recordType(TreeNode* t)
 {
-    TypeIR* Ptr = NewTy(recordTy);  /*新建记录类型的节点*/
+    TypeIR* Ptr = NewTy(recordTy);
+//    创建新的记录类型表
 
     t = t->child[0];                /*从语法数的儿子节点读取域信息*/
-
 
     fieldChain* Ptr2 = NULL;
     fieldChain* Ptr1 = NULL;
 
     fieldChain* body = NULL;
 
-    while (t != NULL)       //循环处理
+    while (t != NULL)
+//        遍历所有节点
     {
 //        填写ptr2指向的内容节点
 //        此处循环是处理此种情况int a,b;
