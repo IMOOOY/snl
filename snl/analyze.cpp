@@ -18,7 +18,7 @@ int Off;        //在同层的变量偏移
 int mainOff;    //主程序的noff偏移
 
 
-SymbTable* scope[SCOPESIZE];//scope栈*
+SymbTable* scope[SCOPESIZE];//scope栈
 TypeIR* intPtr = NULL;      //该指针一直指向整数类型的内部表示
 TypeIR* charPtr = NULL;     //该指针一直指向字符类型的内部表示
 TypeIR* boolPtr = NULL;     //该指针一直指向布尔类型的内部表示

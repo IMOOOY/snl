@@ -37,7 +37,7 @@
 /* MAXTOKENLEN为单词最大长度定义为40 */
 #define MAXTOKENLEN 40
 
-/*初始化符号表中变量的偏移*/
+///初始化符号表中变量的偏移
 #define INITOFF 7
 
 /* SCOPESIZE为符号表scope栈的大小*/
@@ -294,16 +294,20 @@ extern  int NumSTACKEMPTY;
 
 
 
-//MARK:- 语义分析需要用到的类型及变量定义
+//MARK:- 语义分析的类型及变量定义
 
+struct typeIR;
 
-//标识符的类型
-typedef  enum { typeKind, varKind, procKind }IdKind;
+/// 标识符的类型
+///
+/// 一个标识符的类别只可能 为 typeKind, varKind, procKind 其中之一
+typedef  enum {typeKind, varKind, procKind }IdKind;
 
-//变量的类别。dir表直接变量(值参)，indir表示间接变量(变参)
+///变量的类别。dir表直接变量(值参)，indir表示间接变量(变参)
 typedef  enum { dir, indir }AccessKind;
 
-//形参表的结构定义
+//MARK:形参表ParamTable的结构定义
+///形参表的结构定义
 typedef struct  paramTable
 {
     struct symbtable* entry;
@@ -311,60 +315,66 @@ typedef struct  paramTable
     struct paramTable* next;
 }ParamTable;
 
-
-struct typeIR;
-
-
-
-///标识符的属性结构定义
+//MARK: 标识符信息项AttributeIR
+///标识符信息项
+///
+///标识符的内部表示中涉及到层数、偏移量、过程的存储大小和目标代码入口地址等内容
 typedef struct
 {
-    struct typeIR* idtype;          //    指向标识符的类型内部表示
-    IdKind    kind;                 //    标识符的类型
+    struct typeIR* idtype;          //指向标识符的类型内部表示
+    IdKind    kind;                 //标识符的类型
     union
     {
         struct
         {
-            AccessKind   access;    //判断是变参还是值参
+            AccessKind   access;    //变参或值参
             int          level;
             int          off;
-            bool         isParam;   //判断是参数还是普通变量
-
-        }VarAttr;   //变量标识符的属性
+            
+            //TODO: added
+            bool         isParam;   //参数或普通变量
+        }VarAttr;   /*变量标识符的属性*/
+        
         struct
         {
             int         level;     //该过程的层数
-
             ParamTable* param;   //参数表
-
+            
+            //FIXME: deleted
+//            int code;
+//            int size;
+            
+            //TODO: added
             int         mOff;       //过程活动记录的大小
-
-            int         nOff;         //sp到display表的偏移量
-
-            int         procEntry; //过程的入口地址
-
-            int         codeEntry;//过程入口标号,用于中间代码生成
-
-        }ProcAttr;//过程名标识符的属性
+            int         nOff;       //sp到display表的偏移量
+            int         procEntry;  //过程的入口地址
+            int         codeEntry;  //过程入口标号,用于中间代码生成
+        }ProcAttr;      //过程名标识符的属性
 
     }More;//标识符的不同类型有不同的属性
 
 }AttributeIR;
 
 
-
-///符号表的结构定义
+// MARK: 符号表SymbTable数据结构定义
+/**
+ 符号表的数据结构定义
+ 
+ idName: 标识符名
+ 
+ attrIR: 标识符信息项
+ 
+ next: 符号表的下一个元素
+ */
 typedef struct  symbtable
 {
-    char  idName[10];
+    char  idName[10];   /*!< idName */
     AttributeIR  attrIR;
     struct symbtable* next;
-
 }SymbTable;
 
 ///使用scope栈的局部符号表方法中所用到的scope栈
 extern SymbTable* scope[1000];
-
 
 ///scope栈的层数
 extern int Level;
@@ -380,13 +390,18 @@ extern int savedOff;
 
 
 
-//MARK:类型内部表示
+//MARK: - 类型内部表示
 
- ///类型的枚举定义
+///类型的种类的枚举定义
+///
+///intTy, charTy, arrayTy, recordTy, boolTy
+///
+///SNL 的类型包括：整数类型，字符类型，数组类型，记录类型，布尔类型（其 中布尔类型只在判断条件表达式的值时使用）。其中整型和字符类型是标准类型，其 内部表示可以事先构造，数组和记录类型等构造类型则要在变量声明或类型声明时 构造。
 typedef  enum { intTy, charTy, arrayTy, recordTy, boolTy }TypeKind;
 
 
 struct typeIR;
+
 
 ///域类型单元结构定义
 typedef struct fieldchain
@@ -401,17 +416,18 @@ typedef struct fieldchain
 ///类型的内部结构定义
 typedef   struct  typeIR
 {
-    int                size;   /*类型所占空间大小*/
+    int             size;   /*类型所占空间大小*/
     TypeKind        kind;
     union
     {
         struct
         {
-            struct typeIR* indexTy;
-            struct typeIR* elemTy;
-            int    low;     /*记录数组类型的下界*/
-            int    up;      /*记录数组类型的上界*/
-        }ArrayAttr;
+            struct typeIR* indexTy; //指向数组下标类型的内部表示
+            struct typeIR* elemTy;  //指向数组元素类型的内部表示，即指向证书或字符
+            int    low;     //记录数组类型的下界
+            int    up;      //记录数组类型的上界
+        }ArrayAttr;         //数组类型的内部表示的额外内容
+        
         fieldChain* body;  /*记录类型中的域链*/
     } More;
 }TypeIR;
@@ -419,6 +435,9 @@ typedef   struct  typeIR
 
 
 
+
+
+//MARK: - 文件指针
 /* 源代码文本文件指针source */
 extern FILE* source;
 
