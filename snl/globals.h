@@ -1,675 +1,478 @@
-/************************************************************/
-/* ÎÄ¼ş	 globals.h											*/
-/* ËµÃ÷  ÀàPASCALÓïÑÔ±àÒëÆ÷µÄÈ«¾ÖÀàĞÍºÍ±äÁ¿,Ó¦ÔÚÆäËû°üº¬ÎÄ¼şÖ®Ç°	*/
-/* Ö÷Ìâ  ±àÒëÆ÷½á¹¹:Ô­ÀíºÍÊµÀı								*/
-/************************************************************/
+//
+//  globals.hpp
+//  snl
+//
+//  Created by IMOOOY on 2021/4/25.
+//
+/**
+ ç±»PASCALè¯­è¨€ç¼–è¯‘å™¨çš„å…¨å±€ç±»å‹å’Œå˜é‡,åº”åœ¨å…¶ä»–åŒ…å«æ–‡ä»¶ä¹‹å‰
+ ç¼–è¯‘å™¨ç»“æ„:åŸç†å’Œå®ä¾‹
+ */
 
-/* ÈçÒÑ¾­ÁªÈëÍ·ÎÄ¼şglobals.hÔò²»ÔÙÁªÈë */
+
+
+/* å¦‚å·²ç»è”å…¥å¤´æ–‡ä»¶globals.håˆ™ä¸å†è”å…¥ */
 #ifndef _GLOBALS_H_
 #define _GLOBALS_H_
 
-/****** globals.hËù°üº¬Í·ÎÄ¼ş ******/
+/****** globals.hæ‰€åŒ…å«å¤´æ–‡ä»¶ ******/
 #include "stdio.h"
 #include "stdlib.h"
 
-/* ¶¨Òå³£Á¿FALSEÎª0 */
+/* å®šä¹‰å¸¸é‡FALSEä¸º0 */
 #ifndef FALSE
 #define FALSE 0
 #endif
 
-/* ¶¨Òå³£Á¿TRUEÎª1 */
+/* å®šä¹‰å¸¸é‡TRUEä¸º1 */
 #ifndef TRUE
 #define TRUE 1
 #endif
 
 
-/* ¶¨Òå±£Áô×ÖÊıÁ¿³£Á¿MAXRESERVEDÎª21 */
+/* å®šä¹‰ä¿ç•™å­—æ•°é‡å¸¸é‡MAXRESERVEDä¸º21 */
 #define MAXRESERVED 21
 
 
-/* MAXTOKENLENÎªµ¥´Ê×î´ó³¤¶È¶¨ÒåÎª40 */
+/* MAXTOKENLENä¸ºå•è¯æœ€å¤§é•¿åº¦å®šä¹‰ä¸º40 */
 #define MAXTOKENLEN 40
 
-/*³õÊ¼»¯·ûºÅ±íÖĞ±äÁ¿µÄÆ«ÒÆ*/
+/*åˆå§‹åŒ–ç¬¦å·è¡¨ä¸­å˜é‡çš„åç§»*/
 #define INITOFF 7
 
-/* SCOPESIZEÎª·ûºÅ±íscopeÕ»µÄ´óĞ¡*/
+/* SCOPESIZEä¸ºç¬¦å·è¡¨scopeæ ˆçš„å¤§å°*/
 #define SCOPESIZE 1000
 
-/*¶¨ÒåtokenµÄ³¤¶È*/
+/*å®šä¹‰tokençš„é•¿åº¦*/
 #define TOKENLEN sizeof (TokenType)
 
-/*¶¨ÒåÁ´±í½ÚµãµÄ³¤¶È*/
-#define CHAINNODELEN sizeof (ChainNodeType) 
+/*å®šä¹‰é“¾è¡¨èŠ‚ç‚¹çš„é•¿åº¦*/
+#define CHAINNODELEN sizeof (ChainNodeType)
 
 
-/********************** µ¥´ÊµÄ´Ê·¨ÀàĞÍ ********************/
+/********************** å•è¯çš„è¯æ³•ç±»å‹ ********************/
 typedef enum
 {
-	/* ²¾¼Çµ¥´Ê·ûºÅ */
-	ENDFILE, ERROR,
-	/* ±£Áô×Ö */
-	PROGRAM, PROCEDURE, TYPE, VAR, IF,
-	THEN, ELSE, FI, WHILE, DO,
-	ENDWH, BEGIN, END, READ, WRITE,
-	ARRAY, OF, RECORD, RETURN,
+    /* ç°¿è®°å•è¯ç¬¦å· */
+    ENDFILE, ERROR,
+    /* ä¿ç•™å­— */
+    PROGRAM, PROCEDURE, TYPE, VAR, IF,
+    THEN, ELSE, FI, WHILE, DO,
+    ENDWH, BEGIN, END, READ, WRITE,
+    ARRAY, OF, RECORD, RETURN,
 
-	INTEGER, CHAR,
-	/* ¶à×Ö·ûµ¥´Ê·ûºÅ */
-	ID, INTC, CHARC,
-	/*ÌØÊâ·ûºÅ */
-	ASSIGN, EQ, LT, PLUS, MINUS,
-	TIMES, OVER, LPAREN, RPAREN, DOT,
-	COLON, SEMI, COMMA, LMIDPAREN, RMIDPAREN,
-	UNDERANGE
+    INTEGER, CHAR,
+    /* å¤šå­—ç¬¦å•è¯ç¬¦å· */
+    ID, INTC, CHARC,
+    /*ç‰¹æ®Šç¬¦å· */
+    ASSIGN, EQ, LT, PLUS, MINUS,
+    TIMES, OVER, LPAREN, RPAREN, DOT,
+    COLON, SEMI, COMMA, LMIDPAREN, RMIDPAREN,
+    UNDERANGE
 } LexType;
 
 
-/*********** µ¥´ÊµÄÀàĞÍ£¬°üÀ¨´Ê·¨ĞÅÏ¢ºÍÓïÒåĞÅÏ¢ ************/
+/*********** å•è¯çš„ç±»å‹ï¼ŒåŒ…æ‹¬è¯æ³•ä¿¡æ¯å’Œè¯­ä¹‰ä¿¡æ¯ ************/
 typedef struct tokenType
 {
-	int     lineshow;
-	LexType Lex;
-	char    Sem[MAXTOKENLEN + 1];
+    int     lineshow;
+    LexType Lex;
+    char    Sem[MAXTOKENLEN + 1];
 } TokenType;
 
 
-/***********Á´±íµÄ½áµãÀàĞÍ£¬°üÀ¨Token²¿·ÖºÍÖ¸Õë²¿·Ö**********/
+/***********é“¾è¡¨çš„ç»“ç‚¹ç±»å‹ï¼ŒåŒ…æ‹¬Tokenéƒ¨åˆ†å’ŒæŒ‡é’ˆéƒ¨åˆ†**********/
 typedef struct  node
 {
-	TokenType   Token;      //µ¥´Ê
-	struct node* nextToken; //Ö¸ÏòÏÂÒ»¸öµ¥´ÊµÄÖ¸Õë
+    TokenType   Token;      //å•è¯
+    struct node* nextToken; //æŒ‡å‘ä¸‹ä¸€ä¸ªå•è¯çš„æŒ‡é’ˆ
 } ChainNodeType;
 
 
 
 
 /******************************************************
- ******************   Óï·¨·ÖÎöÊ÷   ********************
+ ******************   è¯­æ³•åˆ†ææ ‘   ********************
  ******************************************************/
 
- /*Óï·¨Ê÷¸ù½ÚµãProK,³ÌĞòÍ·½áµãPheadK£¬ÉùÃ÷ÀàĞÍ½ÚµãDecK,
-   ±êÖ¾×Ó½áµã¶¼ÊÇÀàĞÍÉùÃ÷µÄ½áµãTypeK,±êÖ¾×Ó½áµã¶¼ÊÇ±äÁ¿ÉùÃ÷µÄ½áµãVarK,
-   º¯ÊıÉùÃ÷½áµãFuncDecK,Óï¾äĞòÁĞ½ÚµãStmLK,Óï¾äÉùÃ÷½áµãStmtK,
-   ±í´ïÊ½½áµãExpK*/
+ /*è¯­æ³•æ ‘æ ¹èŠ‚ç‚¹ProK,ç¨‹åºå¤´ç»“ç‚¹PheadKï¼Œå£°æ˜ç±»å‹èŠ‚ç‚¹DecK,
+   æ ‡å¿—å­ç»“ç‚¹éƒ½æ˜¯ç±»å‹å£°æ˜çš„ç»“ç‚¹TypeK,æ ‡å¿—å­ç»“ç‚¹éƒ½æ˜¯å˜é‡å£°æ˜çš„ç»“ç‚¹VarK,
+   å‡½æ•°å£°æ˜ç»“ç‚¹FuncDecK,è¯­å¥åºåˆ—èŠ‚ç‚¹StmLK,è¯­å¥å£°æ˜ç»“ç‚¹StmtK,
+   è¡¨è¾¾å¼ç»“ç‚¹ExpK*/
 typedef enum { ProK, PheadK, DecK, TypeK, VarK, ProcDecK, StmLK, StmtK, ExpK }
 NodeKind;
 
 
-/*ÉùÃ÷ÀàĞÍDeckind ÀàĞÍµÄÃ¶¾Ù¶¨Òå£º
-  Êı×éÀàĞÍArrayK,×Ö·ûÀàĞÍCharK,
-  ÕûÊıÀàĞÍIntegerK,¼ÇÂ¼ÀàĞÍRecordK,
-  ÒÔÀàĞÍ±êÊ¶·û×÷ÎªÀàĞÍµÄIdK*/
+/*å£°æ˜ç±»å‹Deckind ç±»å‹çš„æšä¸¾å®šä¹‰ï¼š
+  æ•°ç»„ç±»å‹ArrayK,å­—ç¬¦ç±»å‹CharK,
+  æ•´æ•°ç±»å‹IntegerK,è®°å½•ç±»å‹RecordK,
+  ä»¥ç±»å‹æ ‡è¯†ç¬¦ä½œä¸ºç±»å‹çš„IdK*/
 typedef enum { ArrayK, CharK, IntegerK, RecordK, IdK }  DecKind;
 
 
 
-/* Óï¾äÀàĞÍStmtKindÀàĞÍµÄÃ¶¾Ù¶¨Òå:			*
- * ÅĞ¶ÏÀàĞÍIfK,Ñ­»·ÀàĞÍWhileK				*
- * ¸³ÖµÀàĞÍAssignK,¶ÁÀàĞÍReadK              *
- * Ğ´ÀàĞÍWriteK£¬º¯Êıµ÷ÓÃÀàĞÍCallK          */
+/* è¯­å¥ç±»å‹StmtKindç±»å‹çš„æšä¸¾å®šä¹‰:            *
+ * åˆ¤æ–­ç±»å‹IfK,å¾ªç¯ç±»å‹WhileK                *
+ * èµ‹å€¼ç±»å‹AssignK,è¯»ç±»å‹ReadK              *
+ * å†™ç±»å‹WriteKï¼Œå‡½æ•°è°ƒç”¨ç±»å‹CallK          */
 typedef enum { IfK, WhileK, AssignK, ReadK, WriteK, CallK, ReturnK } StmtKind;
 
 
-/* ±í´ïÊ½ÀàĞÍExpKindÀàĞÍµÄÃ¶¾Ù¶¨Òå:         *
- * ²Ù×÷ÀàĞÍOpK,³£ÊıÀàĞÍConstK,±äÁ¿ÀàĞÍVarK */
+/* è¡¨è¾¾å¼ç±»å‹ExpKindç±»å‹çš„æšä¸¾å®šä¹‰:         *
+ * æ“ä½œç±»å‹OpK,å¸¸æ•°ç±»å‹ConstK,å˜é‡ç±»å‹VarK */
 typedef enum { OpK, ConstK, VariK } ExpKind;
 
 
-/* ±äÁ¿ÀàĞÍVarKindÀàĞÍµÄÃ¶¾Ù¶¨Òå:           *
- * ±êÊ¶·ûIdV,Êı×é³ÉÔ±ArrayMembV,Óò³ÉÔ±FieldMembV*/
+/* å˜é‡ç±»å‹VarKindç±»å‹çš„æšä¸¾å®šä¹‰:           *
+ * æ ‡è¯†ç¬¦IdV,æ•°ç»„æˆå‘˜ArrayMembV,åŸŸæˆå‘˜FieldMembV*/
 typedef enum { IdV, ArrayMembV, FieldMembV } VarKind;
 
 
-/* ÀàĞÍ¼ì²éExpTypeÀàĞÍµÄÃ¶¾Ù¶¨Òå:           *
- * ¿ÕVoid,ÕûÊıÀàĞÍInteger,×Ö·ûÀàĞÍChar      */
+/* ç±»å‹æ£€æŸ¥ExpTypeç±»å‹çš„æšä¸¾å®šä¹‰:           *
+ * ç©ºVoid,æ•´æ•°ç±»å‹Integer,å­—ç¬¦ç±»å‹Char      */
 typedef enum { Void, Integer, Boolean } ExpType;
 
-/* ²ÎÊıÀàĞÍParamTypeÀàĞÍµÄÃ¶¾Ù¶¨Òå£º        *
- * Öµ²ÎvalparamType,±ä²ÎvarparamType        */
+/* å‚æ•°ç±»å‹ParamTypeç±»å‹çš„æšä¸¾å®šä¹‰ï¼š        *
+ * å€¼å‚valparamType,å˜å‚varparamType        */
 typedef enum { valparamType, varparamType } ParamType;
 
-/* ¶¨ÒåÓï·¨Ê÷½ÚµãµÄ×î´ó×Ó½ÚµãÊıMAXCHILDRRENÎª3 */
-/* ¹ı³ÌÉùÃ÷²¿·ÖµÄ×Ó½Úµãchild[0]Ö¸Ïò²ÎÊı²¿·Ö£¬
-   ×Ó½Úµãchild[1]Ö¸ÏòÉùÃ÷Ìå²¿·Ö£¬×Ó½Úµãchild[2]
-   Ö¸Ïòº¯ÊıµÄÓï¾ä²¿·Ö£»*/
-#define MAXCHILDREN 3 
+/* å®šä¹‰è¯­æ³•æ ‘èŠ‚ç‚¹çš„æœ€å¤§å­èŠ‚ç‚¹æ•°MAXCHILDRRENä¸º3 */
+/* è¿‡ç¨‹å£°æ˜éƒ¨åˆ†çš„å­èŠ‚ç‚¹child[0]æŒ‡å‘å‚æ•°éƒ¨åˆ†ï¼Œ
+   å­èŠ‚ç‚¹child[1]æŒ‡å‘å£°æ˜ä½“éƒ¨åˆ†ï¼Œå­èŠ‚ç‚¹child[2]
+   æŒ‡å‘å‡½æ•°çš„è¯­å¥éƒ¨åˆ†ï¼›*/
+#define MAXCHILDREN 3
 
-   /*ÌáÇ°ÉùÃ÷·ûºÅ±í½á¹¹*/
+   /*æå‰å£°æ˜ç¬¦å·è¡¨ç»“æ„*/
 struct symbtable;
 
-/********** Óï·¨Ê÷½ÚµãtreeNodeÀàĞÍ *********/
+/********** è¯­æ³•æ ‘èŠ‚ç‚¹treeNodeç±»å‹ *********/
 typedef struct treeNode
 
 {
-	struct treeNode* child[MAXCHILDREN];		/* ×Ó½ÚµãÖ¸Õë	*/
-	struct treeNode* sibling;					/* ĞÖµÜ½ÚµãÖ¸Õë	*/
-	int lineno;								/* Ô´´úÂëĞĞºÅ	*/
-	NodeKind nodekind;						    /* ½ÚµãÀàĞÍ		*/
-	union
-	{
-		DecKind  dec;
-		StmtKind stmt;
-		ExpKind  exp;
-	} kind;                       /* ¾ßÌåÀàĞÍ     */
+    struct treeNode* child[MAXCHILDREN];        /* å­èŠ‚ç‚¹æŒ‡é’ˆ    */
+    struct treeNode* sibling;                    /* å…„å¼ŸèŠ‚ç‚¹æŒ‡é’ˆ    */
+    int lineno;                                /* æºä»£ç è¡Œå·    */
+    NodeKind nodekind;                            /* èŠ‚ç‚¹ç±»å‹        */
+    union
+    {
+        DecKind  dec;
+        StmtKind stmt;
+        ExpKind  exp;
+    } kind;                       /* å…·ä½“ç±»å‹     */
 
-	int idnum;                    /* ÏàÍ¬ÀàĞÍµÄ±äÁ¿¸öÊı */
+    int idnum;                    /* ç›¸åŒç±»å‹çš„å˜é‡ä¸ªæ•° */
 
-	char name[10][10];            /* ±êÊ¶·ûµÄÃû³Æ  */
+    char name[10][10];            /* æ ‡è¯†ç¬¦çš„åç§°  */
 
-	struct symbtable* table[10]; /* Óë±êÖ¾·û¶ÔÓ¦µÄ·ûºÅ±íµØÖ·£¬ÔÚÓïÒå·ÖÎö½×¶ÎÌîÈë*/
+    struct symbtable* table[10]; /* ä¸æ ‡å¿—ç¬¦å¯¹åº”çš„ç¬¦å·è¡¨åœ°å€ï¼Œåœ¨è¯­ä¹‰åˆ†æé˜¶æ®µå¡«å…¥*/
 
-	struct
-	{
-		struct
-		{
-			int low;              /* Êı×éÏÂ½ç     */
-			int up;               /* Êı×éÉÏ½ç     */
-			DecKind   childtype;  /* Êı×éµÄ×ÓÀàĞÍ */
-		}ArrayAttr;               /* Êı×éÊôĞÔ     */
+    struct
+    {
+        struct
+        {
+            int low;              /* æ•°ç»„ä¸‹ç•Œ     */
+            int up;               /* æ•°ç»„ä¸Šç•Œ     */
+            DecKind   childtype;  /* æ•°ç»„çš„å­ç±»å‹ */
+        }ArrayAttr;               /* æ•°ç»„å±æ€§     */
 
-		struct
-		{
-			ParamType  paramt;     /* ¹ı³ÌµÄ²ÎÊıÀàĞÍ*/
-		}ProcAttr;                 /* ¹ı³ÌÊôĞÔ      */
+        struct
+        {
+            ParamType  paramt;     /* è¿‡ç¨‹çš„å‚æ•°ç±»å‹*/
+        }ProcAttr;                 /* è¿‡ç¨‹å±æ€§      */
 
-		struct
-		{
-			LexType op;           /* ±í´ïÊ½µÄ²Ù×÷·û*/
-			int val;		      /* ±í´ïÊ½µÄÖµ	   */
-			VarKind  varkind;     /* ±äÁ¿µÄÀà±ğ    */
-			ExpType type;         /* ÓÃÓÚÀàĞÍ¼ì²é  */
-		}ExpAttr;	              /* ±í´ïÊ½ÊôĞÔ    */
+        struct
+        {
+            LexType op;           /* è¡¨è¾¾å¼çš„æ“ä½œç¬¦*/
+            int val;              /* è¡¨è¾¾å¼çš„å€¼       */
+            VarKind  varkind;     /* å˜é‡çš„ç±»åˆ«    */
+            ExpType type;         /* ç”¨äºç±»å‹æ£€æŸ¥  */
+        }ExpAttr;                  /* è¡¨è¾¾å¼å±æ€§    */
 
-		char type_name[10];             /* ÀàĞÍÃûÊÇ±êÊ¶·û  */
+        char type_name[10];             /* ç±»å‹åæ˜¯æ ‡è¯†ç¬¦  */
 
-	} attr;                          /* ÊôĞÔ	       */
+    } attr;                          /* å±æ€§           */
 }TreeNode;
 
-/*·ÇÖÕ¼«·ûµÄ×ÜÊı*/
+/*éç»ˆæç¬¦çš„æ€»æ•°*/
 #define  NTMLNUM    68
 
-/*ÖÕ¼«·ûµÄ×ÜÊı*/
+/*ç»ˆæç¬¦çš„æ€»æ•°*/
 #define  TMLNUM     42
 
-/*LL1·ÖÎö±íµÄ´óĞ¡*/
+/*LL1åˆ†æè¡¨çš„å¤§å°*/
 #define  TABLESIZE  104
 
-/******************ÀàĞÍºÍ±äÁ¿ÉùÃ÷*********************/
+/******************ç±»å‹å’Œå˜é‡å£°æ˜*********************/
 
-/* 1.½øĞĞLL1Óï·¨·ÖÎöÓÃµ½µÄÀàĞÍ¼°¶ÔÓ¦µÄ±äÁ¿  */
+/* 1.è¿›è¡ŒLL1è¯­æ³•åˆ†æç”¨åˆ°çš„ç±»å‹åŠå¯¹åº”çš„å˜é‡  */
 
-/*ËùÓĞ·ÇÖÕ¼«·û£¬Æä¸÷×Ôº¬Òå¿É²Î¿¼LL1ÎÄ·¨*/
+/*æ‰€æœ‰éç»ˆæç¬¦ï¼Œå…¶å„è‡ªå«ä¹‰å¯å‚è€ƒLL1æ–‡æ³•*/
 typedef enum
 {
-	Program, ProgramHead, ProgramName, DeclarePart,
-	TypeDec, TypeDeclaration, TypeDecList, TypeDecMore,
-	TypeId, TypeName, BaseType, StructureType,
-	ArrayType, Low, Top, RecType,
-	FieldDecList, FieldDecMore, IdList, IdMore,
-	VarDec, VarDeclaration, VarDecList, VarDecMore,
-	VarIdList, VarIdMore, ProcDec, ProcDeclaration,
-	ProcDecMore, ProcName, ParamList, ParamDecList,
-	ParamMore, Param, FormList, FidMore,
-	ProcDecPart, ProcBody, ProgramBody, StmList,
-	StmMore, Stm, AssCall, AssignmentRest,
-	ConditionalStm, StmL, LoopStm, InputStm,
-	InVar, OutputStm, ReturnStm, CallStmRest,
-	ActParamList, ActParamMore, RelExp, OtherRelE,
-	Exp, OtherTerm, Term, OtherFactor,
-	Factor, Variable, VariMore, FieldVar,
-	FieldVarMore, CmpOp, AddOp, MultOp
+    Program, ProgramHead, ProgramName, DeclarePart,
+    TypeDec, TypeDeclaration, TypeDecList, TypeDecMore,
+    TypeId, TypeName, BaseType, StructureType,
+    ArrayType, Low, Top, RecType,
+    FieldDecList, FieldDecMore, IdList, IdMore,
+    VarDec, VarDeclaration, VarDecList, VarDecMore,
+    VarIdList, VarIdMore, ProcDec, ProcDeclaration,
+    ProcDecMore, ProcName, ParamList, ParamDecList,
+    ParamMore, Param, FormList, FidMore,
+    ProcDecPart, ProcBody, ProgramBody, StmList,
+    StmMore, Stm, AssCall, AssignmentRest,
+    ConditionalStm, StmL, LoopStm, InputStm,
+    InVar, OutputStm, ReturnStm, CallStmRest,
+    ActParamList, ActParamMore, RelExp, OtherRelE,
+    Exp, OtherTerm, Term, OtherFactor,
+    Factor, Variable, VariMore, FieldVar,
+    FieldVarMore, CmpOp, AddOp, MultOp
 
 }  NontmlType;
 
-/*ËùÓĞÖÕ¼«·û£¬È¡×Ôµ¥´ÊµÄ´Ê·¨ÀàĞÍµÄÃ¶¾Ù¶¨Òå£¬¿É²Î¿¼zglobals.hÍ·ÎÄ¼ş*/
+/*æ‰€æœ‰ç»ˆæç¬¦ï¼Œå–è‡ªå•è¯çš„è¯æ³•ç±»å‹çš„æšä¸¾å®šä¹‰ï¼Œå¯å‚è€ƒzglobals.hå¤´æ–‡ä»¶*/
 typedef LexType  TmlType;
 
 
-/*ÊµÏÖLL1·ÖÎöÓÃµÄ·ÖÎöÕ»£¬´æ·ÅµÄÊÇÖÕ¼«·ûºÍ·ÇÖÕ¼«·û */
+/*å®ç°LL1åˆ†æç”¨çš„åˆ†ææ ˆï¼Œå­˜æ”¾çš„æ˜¯ç»ˆæç¬¦å’Œéç»ˆæç¬¦ */
 typedef struct Node
-{  /*ÄÚÈİ±êÖ¾*/
-	int flag;    /* flagÎª1£¬±íÊ¾Õ»ÖĞÄÚÈİÎª·ÇÖÕ¼«·û£»*/
-				 /* flagÎª2£¬±íÊ¾Õ»ÖĞÄÚÈİÎªÖÕ¼«·û    */
-	/*ÄÚÈİ*/
-	union {
-		NontmlType Ntmlvar;  /*·ÇÖÕ¼«·û²¿·Ö*/
-		TmlType tmlvar;       /*ÖÕ¼«·û²¿·Ö*/
-	} var;
+{  /*å†…å®¹æ ‡å¿—*/
+    int flag;    /* flagä¸º1ï¼Œè¡¨ç¤ºæ ˆä¸­å†…å®¹ä¸ºéç»ˆæç¬¦ï¼›*/
+                 /* flagä¸º2ï¼Œè¡¨ç¤ºæ ˆä¸­å†…å®¹ä¸ºç»ˆæç¬¦    */
+    /*å†…å®¹*/
+    union {
+        NontmlType Ntmlvar;  /*éç»ˆæç¬¦éƒ¨åˆ†*/
+        TmlType tmlvar;       /*ç»ˆæç¬¦éƒ¨åˆ†*/
+    } var;
 
-	/*Ö¸ÏòÏÂÒ»¸ö½ÚµãµÄÖ¸Õë*/
-	struct Node* underNode;
+    /*æŒ‡å‘ä¸‹ä¸€ä¸ªèŠ‚ç‚¹çš„æŒ‡é’ˆ*/
+    struct Node* underNode;
 
 }  StackNode;
 
 
-/* 2.´´½¨Óï·¨Ê÷ËùĞèµÄÀàĞÍ¼°±äÁ¿**/
+/* 2.åˆ›å»ºè¯­æ³•æ ‘æ‰€éœ€çš„ç±»å‹åŠå˜é‡**/
 
-/*Îª½¨Á¢ÉùÃ÷ºÍÓï¾ä²¿·ÖµÄÓï·¨Ê÷ËùÉèµÄÖ¸ÕëÕ»£¬*
- *×¢ÒâÕ»ÖĞ´æµÄÊÇ´æ·ÅÖ¸ÕëµÄµØÖ·              */
+/*ä¸ºå»ºç«‹å£°æ˜å’Œè¯­å¥éƒ¨åˆ†çš„è¯­æ³•æ ‘æ‰€è®¾çš„æŒ‡é’ˆæ ˆï¼Œ*
+ *æ³¨æ„æ ˆä¸­å­˜çš„æ˜¯å­˜æ”¾æŒ‡é’ˆçš„åœ°å€              */
 typedef struct NodePA
 {
-	TreeNode** pointer;
-	struct NodePA* underNode;
+    TreeNode** pointer;
+    struct NodePA* underNode;
 }  StackNodePA;
 
 
-/*ÎªÉú³É±í´ïÊ½²¿·ÖµÄÓï·¨Ê÷ËùÉèµÄÖ¸ÕëÕ»£¬*
- *Õ»ÖĞ´æµÄÊÇ´æ·ÅÖ¸ÏòÊ÷½ÚµãµÄÖ¸Õë        */
+/*ä¸ºç”Ÿæˆè¡¨è¾¾å¼éƒ¨åˆ†çš„è¯­æ³•æ ‘æ‰€è®¾çš„æŒ‡é’ˆæ ˆï¼Œ*
+ *æ ˆä¸­å­˜çš„æ˜¯å­˜æ”¾æŒ‡å‘æ ‘èŠ‚ç‚¹çš„æŒ‡é’ˆ        */
 typedef struct NodeP
 {
-	TreeNode* pointer;
-	struct NodeP* underNode;
+    TreeNode* pointer;
+    struct NodeP* underNode;
 }StackNodeP;
 
-/*·ûºÅÕ»¶¥Ö¸Õë*/
+/*ç¬¦å·æ ˆé¡¶æŒ‡é’ˆ*/
 extern StackNode* StackTop;
 
-/*Õ»¿Õ±êÖ¾*/
+/*æ ˆç©ºæ ‡å¿—*/
 extern  int STACKEMPTY;
 
-/*Óï·¨Ê÷Õ»¶¥Ö¸Õë*/
+/*è¯­æ³•æ ‘æ ˆé¡¶æŒ‡é’ˆ*/
 extern  StackNodePA* StackTopPA;
-/*Õ»¿Õ±êÖ¾*/
+/*æ ˆç©ºæ ‡å¿—*/
 extern  int  paSTACKEMPTY;
 
-/*²Ù×÷·ûÕ»µÄÕ»¶¥Ö¸Õë*/
+/*æ“ä½œç¬¦æ ˆçš„æ ˆé¡¶æŒ‡é’ˆ*/
 extern  StackNodeP* OpStackTop;
-/*²Ù×÷·ûÕ»¿Õ±êÖ¾*/
+/*æ“ä½œç¬¦æ ˆç©ºæ ‡å¿—*/
 extern  int OpSTACKEMPTY;
 
-/*²Ù×÷ÊıÕ»µÄÕ»¶¥Ö¸Õë*/
+/*æ“ä½œæ•°æ ˆçš„æ ˆé¡¶æŒ‡é’ˆ*/
 extern  StackNodeP* NumStackTop;
 
-/*²Ù×÷ÊıÕ»¿Õ±êÖ¾*/
+/*æ“ä½œæ•°æ ˆç©ºæ ‡å¿—*/
 extern  int NumSTACKEMPTY;
 
 
 
-/******************************************************
- **********ÓïÒå·ÖÎöĞèÒªÓÃµ½µÄÀàĞÍ¼°±äÁ¿¶¨Òå************
- ******************************************************/
+
+//MARK:- è¯­ä¹‰åˆ†æéœ€è¦ç”¨åˆ°çš„ç±»å‹åŠå˜é‡å®šä¹‰
 
 
- /*±êÊ¶·ûµÄÀàĞÍ*/
+//æ ‡è¯†ç¬¦çš„ç±»å‹
 typedef  enum { typeKind, varKind, procKind }IdKind;
 
-/*±äÁ¿µÄÀà±ğ¡£dir±íÖ±½Ó±äÁ¿(Öµ²Î)£¬indir±íÊ¾¼ä½Ó±äÁ¿(±ä²Î)*/
+//å˜é‡çš„ç±»åˆ«ã€‚dirè¡¨ç›´æ¥å˜é‡(å€¼å‚)ï¼Œindirè¡¨ç¤ºé—´æ¥å˜é‡(å˜å‚)
 typedef  enum { dir, indir }AccessKind;
 
-/*ĞÎ²Î±íµÄ½á¹¹¶¨Òå*/
+//å½¢å‚è¡¨çš„ç»“æ„å®šä¹‰
 typedef struct  paramTable
 {
-	struct symbtable* entry;/*Ö¸Ïò¸ÃĞÎ²ÎËùÔÚ·ûºÅ±íÖĞµÄµØÖ·Èë¿Ú*/
-	struct paramTable* next;
+    struct symbtable* entry;
+//    æŒ‡å‘è¯¥å½¢å‚æ‰€åœ¨ç¬¦å·è¡¨ä¸­çš„åœ°å€å…¥å£
+    struct paramTable* next;
 }ParamTable;
 
 
 struct typeIR;
-/*±êÊ¶·ûµÄÊôĞÔ½á¹¹¶¨Òå*/
+
+
+
+///æ ‡è¯†ç¬¦çš„å±æ€§ç»“æ„å®šä¹‰
 typedef struct
 {
-	struct typeIR* idtype;		/*Ö¸Ïò±êÊ¶·ûµÄÀàĞÍÄÚ²¿±íÊ¾*/
-	IdKind    kind;					/*±êÊ¶·ûµÄÀàĞÍ*/
-	union
-	{
-		struct
-		{
-			AccessKind   access;   /*ÅĞ¶ÏÊÇ±ä²Î»¹ÊÇÖµ²Î*/
-			int          level;
-			int          off;
-			bool         isParam;  /*ÅĞ¶ÏÊÇ²ÎÊı»¹ÊÇÆÕÍ¨±äÁ¿*/
+    struct typeIR* idtype;          //    æŒ‡å‘æ ‡è¯†ç¬¦çš„ç±»å‹å†…éƒ¨è¡¨ç¤º
+    IdKind    kind;                 //    æ ‡è¯†ç¬¦çš„ç±»å‹
+    union
+    {
+        struct
+        {
+            AccessKind   access;    //åˆ¤æ–­æ˜¯å˜å‚è¿˜æ˜¯å€¼å‚
+            int          level;
+            int          off;
+            bool         isParam;   //åˆ¤æ–­æ˜¯å‚æ•°è¿˜æ˜¯æ™®é€šå˜é‡
 
-		}VarAttr;/*±äÁ¿±êÊ¶·ûµÄÊôĞÔ*/
-		struct
-		{
-			int         level;     /*¸Ã¹ı³ÌµÄ²ãÊı*/
+        }VarAttr;   //å˜é‡æ ‡è¯†ç¬¦çš„å±æ€§
+        struct
+        {
+            int         level;     //è¯¥è¿‡ç¨‹çš„å±‚æ•°
 
-			ParamTable* param;   /*²ÎÊı±í*/
+            ParamTable* param;   //å‚æ•°è¡¨
 
-			int         mOff;	   /*¹ı³Ì»î¶¯¼ÇÂ¼µÄ´óĞ¡*/
+            int         mOff;       //è¿‡ç¨‹æ´»åŠ¨è®°å½•çš„å¤§å°
 
-			int         nOff;  	   /*spµ½display±íµÄÆ«ÒÆÁ¿*/
+            int         nOff;         //spåˆ°displayè¡¨çš„åç§»é‡
 
-			int         procEntry; /*¹ı³ÌµÄÈë¿ÚµØÖ·*/
+            int         procEntry; //è¿‡ç¨‹çš„å…¥å£åœ°å€
 
-			int         codeEntry;/*¹ı³ÌÈë¿Ú±êºÅ,ÓÃÓÚÖĞ¼ä´úÂëÉú³É*/
+            int         codeEntry;//è¿‡ç¨‹å…¥å£æ ‡å·,ç”¨äºä¸­é—´ä»£ç ç”Ÿæˆ
 
-		}ProcAttr;/*¹ı³ÌÃû±êÊ¶·ûµÄÊôĞÔ*/
+        }ProcAttr;//è¿‡ç¨‹åæ ‡è¯†ç¬¦çš„å±æ€§
 
-	}More;/*±êÊ¶·ûµÄ²»Í¬ÀàĞÍÓĞ²»Í¬µÄÊôĞÔ*/
+    }More;//æ ‡è¯†ç¬¦çš„ä¸åŒç±»å‹æœ‰ä¸åŒçš„å±æ€§
 
 }AttributeIR;
 
 
-/*·ûºÅ±íµÄ½á¹¹¶¨Òå*/
+
+///ç¬¦å·è¡¨çš„ç»“æ„å®šä¹‰
 typedef struct  symbtable
 {
-	char  idName[10];
-	AttributeIR  attrIR;
-	struct symbtable* next;
+    char  idName[10];
+    AttributeIR  attrIR;
+    struct symbtable* next;
 
 }SymbTable;
 
-/*Ê¹ÓÃscopeÕ»µÄ¾Ö²¿·ûºÅ±í·½·¨ÖĞËùÓÃµ½µÄscopeÕ»*/
+///ä½¿ç”¨scopeæ ˆçš„å±€éƒ¨ç¬¦å·è¡¨æ–¹æ³•ä¸­æ‰€ç”¨åˆ°çš„scopeæ ˆ
 extern SymbTable* scope[1000];
 
-/*scopeÕ»µÄ²ãÊı*/
+
+///scopeæ ˆçš„å±‚æ•°
 extern int Level;
 
-/*ÔÚÍ¬²ãµÄ±äÁ¿Æ«ÒÆ*/
+///åœ¨åŒå±‚çš„å˜é‡åç§»
 extern int Off;
 
-/*¼ÇÂ¼Ö÷³ÌĞòµÄdisplayOff*/
+///è®°å½•ä¸»ç¨‹åºçš„displayOff
 extern int mainOff;
 
-/*¼ÇÂ¼µ±Ç°²ãµÄdisplayOff*/
+///è®°å½•å½“å‰å±‚çš„displayOff
 extern int savedOff;
 
 
 
+//MARK:ç±»å‹å†…éƒ¨è¡¨ç¤º
 
-/******************************************************
- *****************   ÀàĞÍÄÚ²¿±íÊ¾    ******************
- ******************************************************/
-
- /*ÀàĞÍµÄÃ¶¾Ù¶¨Òå*/
+ ///ç±»å‹çš„æšä¸¾å®šä¹‰
 typedef  enum { intTy, charTy, arrayTy, recordTy, boolTy }TypeKind;
 
 
 struct typeIR;
 
-/*ÓòÀàĞÍµ¥Ôª½á¹¹¶¨Òå*/
+///åŸŸç±»å‹å•å…ƒç»“æ„å®šä¹‰
 typedef struct fieldchain
 {
-	char   id[10];              /*±äÁ¿Ãû*/
-	int    off;                 /*ËùÔÚ¼ÇÂ¼ÖĞµÄÆ«ÒÆ*/
-	struct typeIR* UnitType; /*ÓòÖĞ³ÉÔ±µÄÀàĞÍ*/
-	struct fieldchain* Next;
+    char   id[10];              /*å˜é‡å*/
+    int    off;                 /*æ‰€åœ¨è®°å½•ä¸­çš„åç§»*/
+    struct typeIR* UnitType; /*åŸŸä¸­æˆå‘˜çš„ç±»å‹*/
+    struct fieldchain* Next;
 }fieldChain;
 
 
-/*ÀàĞÍµÄÄÚ²¿½á¹¹¶¨Òå*/
+///ç±»å‹çš„å†…éƒ¨ç»“æ„å®šä¹‰
 typedef   struct  typeIR
 {
-	int				size;   /*ÀàĞÍËùÕ¼¿Õ¼ä´óĞ¡*/
-	TypeKind		kind;
-	union
-	{
-		struct
-		{
-			struct typeIR* indexTy;
-			struct typeIR* elemTy;
-			int    low;     /*¼ÇÂ¼Êı×éÀàĞÍµÄÏÂ½ç*/
-			int    up;      /*¼ÇÂ¼Êı×éÀàĞÍµÄÉÏ½ç*/
-		}ArrayAttr;
-		fieldChain* body;  /*¼ÇÂ¼ÀàĞÍÖĞµÄÓòÁ´*/
-	} More;
+    int                size;   /*ç±»å‹æ‰€å ç©ºé—´å¤§å°*/
+    TypeKind        kind;
+    union
+    {
+        struct
+        {
+            struct typeIR* indexTy;
+            struct typeIR* elemTy;
+            int    low;     /*è®°å½•æ•°ç»„ç±»å‹çš„ä¸‹ç•Œ*/
+            int    up;      /*è®°å½•æ•°ç»„ç±»å‹çš„ä¸Šç•Œ*/
+        }ArrayAttr;
+        fieldChain* body;  /*è®°å½•ç±»å‹ä¸­çš„åŸŸé“¾*/
+    } More;
 }TypeIR;
 
 
 
-/**************************************************************/
-/******ÏÂÃæÊÇÖĞ¼ä´úÂëÉú³É²¿·ÖĞèÒªÓÃµ½µÄÀàĞÍ¼°±äÁ¿¶¨Òå**********/
-/**************************************************************/
 
-/*ARG½á¹¹·ÖÎª£º±êºÅ£¬ÊıÖµ£¬µØÖ·ÈıÖÖ*/
-typedef  enum { LabelForm, ValueForm, AddrForm }  ArgForm;
-
-/*¶¨ÒåARG½á¹¹*/
-typedef struct
-{
-	ArgForm   form;
-	union
-	{
-		int  value;  /*¼ÍÂ¼ÕûÊıÖµ*/
-		int  label;  /*¼ÍÂ¼±êºÅµÄÖµ*/
-		struct
-		{
-			char    name[10];	/*×¢£º±äÁ¿Ãû×ÖÒÑ¾­Ã»ÓÃ£¬ÕâÀï±£ÁôÖ»ÊÇÎªÁËÏÔÊ¾½á¹ûÇåÎú*/
-			int     dataLevel;
-			int     dataOff;
-			AccessKind  access; /*ÀàĞÍAccessKindÔÚÇ°Ãæ¶¨Òå*/
-		}addr;   /*±äÁ¿µÄARG½á¹¹ĞèÒª¼ÍÂ¼µÄĞÅÏ¢*/
-	}Attr;
-} ArgRecord;
-
-/*ÖĞ¼ä´úÂëµÄÀà±ğ*/
-typedef  enum
-{
-	ADD, SUB, MULT, DIV, EQC, LTC,
-	READC, WRITEC, RETURNC, ASSIG, AADD, LABEL,
-	JUMP0, JUMP, CALL, VARACT, VALACT,
-	PENTRY, ENDPROC, MENTRY, WHILESTART, ENDWHILE
-}  CodeKind;
-
-/*ÖĞ¼ä´úÂëµÄ½á¹¹*/
-typedef struct
-{
-	CodeKind   codekind;
-	ArgRecord* arg1;  /*ÒÔºó¿¼ÂÇÕâÀïÊÇÓÃÖ¸ÕëºÃ£¬»¹ÊÇÖ±½ÓÓÃ
-						 ArgRecordÀàĞÍµÄ±äÁ¿ºÃ*/
-	ArgRecord* arg2;
-	ArgRecord* arg3;
-} CodeR;
-
-/*Ô´³ÌĞò¶ÔÓ¦µÄÖĞ¼ä´úÂëĞòÁĞ±íÊ¾*/
-typedef  struct  codeFile
-{
-	CodeR  codeR;
-	struct codeFile* former;
-	struct codeFile* next;
-} CodeFile;
-
-
-
-/**************************************************************/
-/******ÏÂÃæÊÇ³£±í´ïÊ½ÓÅ»¯ĞèÒªÓÃµ½µÄÀàĞÍ¼°±äÁ¿¶¨Òå**************/
-/**************************************************************/
-
-/*³£Á¿¶¨Öµ±í£¬ÓÃÓÚ³£±í´ïÊ½ÓÅ»¯*/
-typedef  struct  constDefT
-{
-	ArgRecord* variable;  /*ÓÃ±äÁ¿µÄARG½á¹¹±íÊ¾±äÁ¿*/
-	int  constValue;       /*¶¨Öµ*/
-	struct constDefT* former;
-	struct constDefT* next;
-
-} ConstDefT;
-
-
-/**************************************************************/
-/******ÏÂÃæÊÇ¹«¹²±í´ïÊ½ÓÅ»¯ĞèÒªÓÃµ½µÄÀàĞÍ¼°±äÁ¿¶¨Òå************/
-/**************************************************************/
-
-/*Öµ±àÂë±íValuNum*/
-typedef  struct  valuNum
-{
-	ArgRecord* arg;
-	AccessKind  access;
-	union
-	{
-		int  valueCode;   /*Ö±½Ó±äÁ¿£¬´æ´¢Öµ±àÂë*/
-		struct
-		{
-			int   valuecode;
-			int   addrcode;
-		} twoCode;         /*¼ä½ÓÁÙÊ±±äÁ¿£¬´æ´¢Öµ±àÂëºÍµØÖ·Âë*/
-
-	} codeInfo;
-	/*Ö¸ÏòÏÂÒ»¸ö½ÚµãÖ¸Õë*/
-	struct valuNum* next;
-
-} ValuNum;
-
-/*ÖĞ¼ä´úÂë¶ÔÓ¦µÄÓ³ÏóÂë½á¹¹*/
-typedef struct
-{
-	int  op1;
-	int  op2;
-	int  result;
-} MirrorCode;
-
-/*¿ÉÓÃ±í´ïÊ½´úÂë±íUsableExpr*/
-typedef  struct  usableExpr
-{
-	CodeFile* code;		  /*ÖĞ¼ä´úÂëµØÖ·*/
-	MirrorCode* mirrorC;      /*Ó³ÏóÂë*/
-	struct usableExpr* next;  /*Ö¸ÏòÏÂÒ»¸ö½Úµã*/
-} UsableExpr;
-
-
-/*ÁÙÊ±±äÁ¿µÄµÈ¼Û±íTempEqua*/
-typedef  struct tempEqua
-{
-	ArgRecord* arg1; /*±»Ìæ»»µÄÁÙÊ±±äÁ¿*/
-	ArgRecord* arg2; /*ÓÃÓÚÌæ»»µÄÁÙÊ±±äÁ¿*/
-	struct  tempEqua* next;
-} TempEqua;
-
-
-/**************************************************************/
-/******ÏÂÃæÊÇÑ­»·²»±äÊ½ÓÅ»¯ĞèÒªÓÃµ½µÄÀàĞÍ¼°±äÁ¿¶¨Òå************/
-/**************************************************************/
-
-
-/*Ñ­»·ĞÅÏ¢±í*/
-typedef  struct
-{
-	int       state;        /*Ñ­»·×´¿ö£¬Îª0Ê±±íÊ¾±¾²ãÑ­»·²»¿ÉÍâÌá*/
-	CodeFile* whileEntry;  /*Ö¸ÏòÑ­»·Èë¿ÚÖĞ¼ä´úÂë*/
-	int       varDef;       /*Ö¸Ïò±¾²ãÑ­»·µÄ±äÁ¿µØÖ·±íÆğÊ¼´¦*/
-	CodeFile* whileEnd;    /*Ö¸ÏòÑ­»·³ö¿ÚÖĞ¼ä´úÂë*/
-} LoopInfo;
-
-/*Ñ­»·ĞÅÏ¢Õ»*/
-typedef  struct loopStack
-{
-	LoopInfo* loopInfo;
-	struct loopStack* under;
-
-} LoopStack;
-
-
-
-
-/**************************************************************/
-/******ÏÂÃæÊÇÄ¿±ê´úÂëÉú³É²¿·ÖĞèÒªÓÃµ½µÄÀàĞÍ¼°±äÁ¿¶¨Òå**********/
-/**************************************************************/
-
-/*±êºÅµØÖ·±í*/
-typedef  struct  labelAddr
-{
-	int  label;
-	int  destNum;
-	struct labelAddr* next;
-} LabelAddr;
-
-/*´¦Àí»ØÌîµØÖ·ÒªÓÃµ½µÄÊı¾İ½á¹¹*/
-typedef struct  backAddr
-{
-	int  backLoc;
-	struct  backAddr* former;
-} BackAddr;
-
-extern  BackAddr* AddrTop;
-
-extern  int AddrEMPTY;
-
-
-
-/********************************************************************/
-/* Ô´´úÂëÎÄ±¾ÎÄ¼şÖ¸Õësource */
+/* æºä»£ç æ–‡æœ¬æ–‡ä»¶æŒ‡é’ˆsource */
 extern FILE* source;
 
-/* ÁĞ±íÊä³öÎÄ¼şÖ¸Õëlisting */
+/* åˆ—è¡¨è¾“å‡ºæ–‡ä»¶æŒ‡é’ˆlisting */
 extern FILE* listing;
 
-/*´Ê·¨·ÖÎö½á¹ûTokenĞòÁĞµÄ´æ´¢ÎÄ¼şÖ¸Õëfp*/
+/*è¯æ³•åˆ†æç»“æœTokenåºåˆ—çš„å­˜å‚¨æ–‡ä»¶æŒ‡é’ˆfp*/
 extern FILE* fp;
 
-/*Ä¿±ê´úÂëÎÄ¼şÖ¸Õë*/
-extern FILE* code;
+/*ç›®æ ‡ä»£ç æ–‡ä»¶æŒ‡é’ˆ*/
+//extern FILE* code;
 
-/*TokenĞòÁĞÖĞµÄtokenÊıÄ¿*/
+/*Tokenåºåˆ—ä¸­çš„tokenæ•°ç›®*/
 extern int Tokennum;
 
-/*Çåµ¥µÄĞĞºÅ*/
+/*æ¸…å•çš„è¡Œå·*/
 extern int lineno;
 
-/*scopeÕ»µÄ²ãÊı*/
+/*scopeæ ˆçš„å±‚æ•°*/
 extern int Level;
 
-/*ÔÚÍ¬²ãµÄ±äÁ¿Æ«ÒÆ*/
+/*åœ¨åŒå±‚çš„å˜é‡åç§»*/
 extern int Off;
 
-/*¼ÇÂ¼Ö÷³ÌĞòµÄdisplayOff*/
-extern int mainOff;
+/*è®°å½•ä¸»ç¨‹åºçš„displayOff*/
+//extern int mainOff;
 
-/*¼ÇÂ¼µ±Ç°²ãµÄdisplayOff*/
-extern int savedOff;
-
-/******************************/
-/*Éú³ÉÖĞ¼ä´úÂë²¿·ÖÊ±ÓÃµ½µÄ±äÁ¿*/
-/******************************/
-/*ÁÙÊ±±äÁ¿±àºÅ*/
-extern  int  TempOffset;
-/*±êºÅÖµ*/
-extern  int  Label;
-
-/*µÚÒ»ÌõÖĞ¼ä´úÂë*/
-extern  CodeFile* firstCode;
-/*×îºóÒ»ÌõÖĞ¼ä´úÂë*/
-extern  CodeFile* lastCode;
+/*è®°å½•å½“å‰å±‚çš„displayOff*/
+//extern int savedOff;
 
 
 
-extern  CodeFile* baseBlock[100];
-
-extern  int  blocknum;
-
-extern  ValuNum* valuNumT;
-
-extern  UsableExpr* usableExprT;
-
-extern  TempEqua* tempEquaT;
-
-/*Ñ­»·ĞÅÏ¢Õ»*/
-extern  LoopStack* loopTop;
-extern  bool  loopStackEmpty;
-
-
-
-/*±£´æÖ÷³ÌĞòµÄdisplay±íµÄÆ«ÒÆ*/
-extern  int StoreNoff;
-
-
-
-/*************************************
- ***********   ×·×Ù±êÖ¾   ************
- *************************************/
-
- /* Ô´³ÌĞò×·×Ù±êÖ¾,Èç¹û¸Ã±êÖ¾ÎªTRUE			 *
-  * Óï·¨·ÖÎöÊ±½«Ô´³ÌĞòĞĞºÅĞ´ÈëÁĞ±íÎÄ¼şlisting */
+// MARK: - è¿½è¸ªæ ‡å¿—
+ /* æºç¨‹åºè¿½è¸ªæ ‡å¿—,å¦‚æœè¯¥æ ‡å¿—ä¸ºTRUE             *
+  * è¯­æ³•åˆ†ææ—¶å°†æºç¨‹åºè¡Œå·å†™å…¥åˆ—è¡¨æ–‡ä»¶listing */
 extern int EchoSource;
 
-/* ´Ê·¨É¨Ãè×·×Ù±êÖ¾,Èç¹û¸Ã±êÖ¾ÎªTRUE				   *
- * ½«Ã¿¸ö±»´Ê·¨É¨ÃèÆ÷Ê¶±ğµÄµ¥´ÊĞÅÏ¢Ğ´ÈëÁĞ±íÎÄ¼şlisting */
+/* è¯æ³•æ‰«æè¿½è¸ªæ ‡å¿—,å¦‚æœè¯¥æ ‡å¿—ä¸ºTRUE                   *
+ * å°†æ¯ä¸ªè¢«è¯æ³•æ‰«æå™¨è¯†åˆ«çš„å•è¯ä¿¡æ¯å†™å…¥åˆ—è¡¨æ–‡ä»¶listing */
 extern int TraceScan;
 
-/* Óï·¨·ÖÎö×·×Ù±êÖ¾,Èç¹û¸Ã±êÖ¾ÎªTRUE				     *
- * ½«Óï·¨Ê÷ÒÔÏßĞÔĞÎÊ½(Ê¹ÓÃ×Ó½ÚµãËõ½ø)Ğ´ÈëÁĞ±íÎÄ¼şlisting */
+/* è¯­æ³•åˆ†æè¿½è¸ªæ ‡å¿—,å¦‚æœè¯¥æ ‡å¿—ä¸ºTRUE                     *
+ * å°†è¯­æ³•æ ‘ä»¥çº¿æ€§å½¢å¼(ä½¿ç”¨å­èŠ‚ç‚¹ç¼©è¿›)å†™å…¥åˆ—è¡¨æ–‡ä»¶listing */
 extern int TraceParse;
 
-/* ÓïÒå·ÖÎö×·×Ù±êÖ¾,Èç¹û¸Ã±êÖ¾ÎªTRUE	 *
- * ½«·ûºÅ±í²åÈëºÍ²éÕÒĞ´ÈëÁĞ±íÎÄ¼şlisting */
+/* è¯­ä¹‰åˆ†æè¿½è¸ªæ ‡å¿—,å¦‚æœè¯¥æ ‡å¿—ä¸ºTRUE     *
+ * å°†ç¬¦å·è¡¨æ’å…¥å’ŒæŸ¥æ‰¾å†™å…¥åˆ—è¡¨æ–‡ä»¶listing */
 extern int TraceTable;
 
 
 extern int TraceCode;
 
-/* ´íÎó×·×Ù±êÖ¾,Èç¹û¸Ã±êÖ¾ÎªTRUE *
- * ·ÀÖ¹´íÎó²úÉúÊ±½øÒ»²½´«µİ´íÎó  */
+/* é”™è¯¯è¿½è¸ªæ ‡å¿—,å¦‚æœè¯¥æ ‡å¿—ä¸ºTRUE *
+ * é˜²æ­¢é”™è¯¯äº§ç”Ÿæ—¶è¿›ä¸€æ­¥ä¼ é€’é”™è¯¯  */
 extern int Error;
 
 #endif

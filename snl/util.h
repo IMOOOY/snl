@@ -85,25 +85,25 @@ static void printSpaces(void);
 
 
 /*********************************/
-ArgRecord* NewTemp(AccessKind  access);
+//ArgRecord* NewTemp(AccessKind  access);
 
 int  NewLabel();
 
-ArgRecord* ARGAddr(char* id, int level, int off, AccessKind access);
+//ArgRecord* ARGAddr(char* id, int level, int off, AccessKind access);
 
-ArgRecord* ARGLabel(int  label);
+//ArgRecord* ARGLabel(int  label);
 
-ArgRecord* ARGValue(int value);
+//ArgRecord* ARGValue(int value);
 
-CodeFile* GenCode(CodeKind codekind, ArgRecord* Arg1, ArgRecord* Arg2, ArgRecord* Arg3);
+//CodeFile* GenCode(CodeKind codekind, ArgRecord* Arg1, ArgRecord* Arg2, ArgRecord* Arg3);
 
-void  PrintCodeName(CodeKind kind);
+//void  PrintCodeName(CodeKind kind);
 
-void PrintContent(ArgRecord* arg);
+//void PrintContent(ArgRecord* arg);
 
-void PrintOneCode(CodeFile* code);
+//void PrintOneCode(CodeFile* code);
 
-void  PrintMidCode(CodeFile* firstCode);
+//void  PrintMidCode(CodeFile* firstCode);
 
 int  DivBaseBlock();
 
@@ -115,9 +115,9 @@ void   printUsbleExpr();
 
 void   printTempEqua();
 
-void  PushLoop(LoopInfo* t);
+//void  PushLoop(LoopInfo* t);
 
-LoopInfo* PopLoop();
+//LoopInfo* PopLoop();
 
 
 

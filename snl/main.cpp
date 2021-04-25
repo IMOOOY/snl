@@ -93,13 +93,13 @@ int lineno = 0;
 int savedOff = 0;
 
 /*指向各基本块的指针*/
-CodeFile* baseBlock[100];
+//CodeFile* baseBlock[100];
 
 /*保存主程序的display表的偏移*/
 int StoreNoff;
 
 /*中间代码序列，以结构的形式给出*/
-CodeFile* midcode = NULL;
+//CodeFile* midcode = NULL;
 
 /*目标代码文件*/
 FILE* code;

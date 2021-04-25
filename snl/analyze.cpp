@@ -1,1026 +1,1026 @@
-/****************************************************/
-/* ÎÄ¼þ analyze.cpp				  					*/
-/* ËµÃ÷ ÀàPASCALÓïÑÔ±àÒëÆ÷ÓïÒå·ÖÎö³ÌÐò  			*/
-/* Ö÷Ìâ ±àÒëÆ÷½á¹¹:Ô­ÀíºÍÊµÀý						*/
-/****************************************************/
+//
+//  analyze.cpp
+//  snl
+//
+//  Created by IMOOOY on 2021/4/10.
+//
 
-/***********  ¸ÃÎÄ¼þËù°üº¬µÄÍ·ÎÄ¼þ  ****************/
-
-#include "globals.h"	
-
+#include "globals.h"
 #include "util.h"
-
-#include "symbTable.h"		
-
-#include "scanner.h"	
-
+#include "symbTable.h"
+#include "scanner.h"
 #include "parse.h"
-
-#include "analyze.h"		
-
+#include "analyze.h"
 #include "string.h"
 
-/*scopeÕ»µÄ²ãÊý*/
-int Level = -1;
-
-/*ÔÚÍ¬²ãµÄ±äÁ¿Æ«ÒÆ*/
-int Off;
-
-/*Ö÷³ÌÐòµÄnoffÆ«ÒÆ*/
-int mainOff;
+int Level = -1; //scopeæ ˆçš„å±‚æ•°
+int Off;        //åœ¨åŒå±‚çš„å˜é‡åç§»
+int mainOff;    //ä¸»ç¨‹åºçš„noffåç§»
 
 
-SymbTable* scope[SCOPESIZE];   /*scopeÕ»*/
+SymbTable* scope[SCOPESIZE];//scopeæ ˆ*
+TypeIR* intPtr = NULL;      //è¯¥æŒ‡é’ˆä¸€ç›´æŒ‡å‘æ•´æ•°ç±»åž‹çš„å†…éƒ¨è¡¨ç¤º
+TypeIR* charPtr = NULL;     //è¯¥æŒ‡é’ˆä¸€ç›´æŒ‡å‘å­—ç¬¦ç±»åž‹çš„å†…éƒ¨è¡¨ç¤º
+TypeIR* boolPtr = NULL;     //è¯¥æŒ‡é’ˆä¸€ç›´æŒ‡å‘å¸ƒå°”ç±»åž‹çš„å†…éƒ¨è¡¨ç¤º
 
-TypeIR* intPtr = NULL;			/*¸ÃÖ¸ÕëÒ»Ö±Ö¸ÏòÕûÊýÀàÐÍµÄÄÚ²¿±íÊ¾*/
-
-TypeIR* charPtr = NULL;		/*¸ÃÖ¸ÕëÒ»Ö±Ö¸Ïò×Ö·ûÀàÐÍµÄÄÚ²¿±íÊ¾*/
-
-TypeIR* boolPtr = NULL;		/*¸ÃÖ¸ÕëÒ»Ö±Ö¸Ïò²¼¶ûÀàÐÍµÄÄÚ²¿±íÊ¾*/
-
-TypeIR* arrayVar(TreeNode* t);
-/*¸Ãº¯ÊýÓÃÓÚ´¦ÀíÊý×éÀàÐÍ±äÁ¿*/
-
-TypeIR* recordVar(TreeNode* t);
-/*¸Ãº¯ÊýÓÃÓÚ´¦Àí¼ÇÂ¼ÀàÐÍ±äÁ¿*/
-
-/***********************ÀàÐÍ´¦Àí*****************************/
+TypeIR* arrayVar(TreeNode* t);//è¯¥å‡½æ•°ç”¨äºŽå¤„ç†æ•°ç»„ç±»åž‹å˜é‡
+TypeIR* recordVar(TreeNode* t);//è¯¥å‡½æ•°ç”¨äºŽå¤„ç†è®°å½•ç±»åž‹å˜é‡
 
 
-
-/*************************************************************/
-/* º¯ÊýÃû  initialize                                        */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý³õÊ¼»¯ÕûÊýÀàÐÍ£¬×Ö·ûÀàÐÍ£¬²¼¶ûÀàÐÍµÄÄÚ²¿±íÊ¾*/
-/* Ëµ  Ã÷  ÓÉÓÚÕâÈýÖÖÀàÐÍ¾ùÎª»ù±¾ÀàÐÍ£¬ÄÚ²¿±íÊ¾¹Ì¶¨¡£        */
-/*************************************************************/
+//MARK: - ç±»åž‹å¤„ç†
+///åˆå§‹åŒ–æ•´æ•°ç±»åž‹ï¼Œå­—ç¬¦ç±»åž‹ï¼Œå¸ƒå°”ç±»åž‹çš„å†…éƒ¨è¡¨ç¤º
+///
+///ä¸‰ç§ç±»åž‹å‡ä¸ºåŸºæœ¬ç±»åž‹ï¼Œå†…éƒ¨è¡¨ç¤ºå›ºå®š
 void initialize(void)
 {
-	intPtr = NewTy(intTy);
+    intPtr = NewTy(intTy);
 
-	charPtr = NewTy(charTy);
+    charPtr = NewTy(charTy);
 
-	boolPtr = NewTy(boolTy);
+    boolPtr = NewTy(boolTy);
 
-	/*scopeÕ»µÄ¸÷²ãÖ¸ÕëÉèÎª¿Õ*/
-	for (int i = 0; i < SCOPESIZE; i++)
-		scope[i] = NULL;
+    /*scopeæ ˆçš„å„å±‚æŒ‡é’ˆè®¾ä¸ºç©º*/
+    for (int i = 0; i < SCOPESIZE; i++)
+        scope[i] = NULL;
 }
 
-/************************************************************/
-/* º¯ÊýÃû  TypeProcess                                      */
-/* ¹¦  ÄÜ  ¸Ãº¯ÊýÓÃÀ´Íê³ÉÀàÐÍ·ÖÎöµÄ¹¤×÷                     */
-/* Ëµ  Ã÷  ´¦ÀíÓï·¨Ê÷µÄµ±Ç°½áµãÀàÐÍ¡£¹¹Ôì³öµ±Ç°ÀàÐÍµÄÄÚ²¿±í */
-/*         Ê¾£¬²¢½«ÆäµØÖ··µ»Ø¸øPtrÀàÐÍÄÚ²¿±íÊ¾µÄµØÖ·.       */
-/************************************************************/
+
+
+/// ç±»åž‹åˆ†æž
+///
+/// å¤„ç†è¯­æ³•æ ‘çš„å½“å‰ç»“ç‚¹ç±»åž‹ã€‚æž„é€ å‡ºå½“å‰ç±»åž‹çš„å†…éƒ¨è¡¨ç¤ºï¼Œå¹¶å°†å…¶åœ°å€è¿”å›žç»™Ptrç±»åž‹å†…éƒ¨è¡¨ç¤ºçš„åœ°å€.
+/// @param t <#t description#>
+/// @param deckind <#deckind description#>
 TypeIR* TypeProcess(TreeNode* t, DecKind deckind)
 {
-	TypeIR* Ptr = NULL;
-	switch (deckind)
-	{
-	case IdK:
-		Ptr = nameType(t); break;         /*ÀàÐÍÎª×Ô¶¨Òå±êÊ¶·û*/
-	case ArrayK:
-		Ptr = arrayType(t); break;        /*ÀàÐÍÎªÊý×éÀàÐÍ*/
-	case RecordK:
-		Ptr = recordType(t); break;       /*ÀàÐÍÎª¼ÇÂ¼ÀàÐÍ*/
-	case IntegerK:
-		Ptr = intPtr; break;              /*ÀàÐÍÎªÕûÊýÀàÐÍ*/
-	case CharK:
-		Ptr = charPtr; break;             /*ÀàÐÍÎª×Ö·ûÀàÐÍ*/
-	}
-	return Ptr;
+    TypeIR* Ptr = NULL;
+    switch (deckind)
+    {
+    case IdK:
+        Ptr = nameType(t); break;         /*ç±»åž‹ä¸ºè‡ªå®šä¹‰æ ‡è¯†ç¬¦*/
+    case ArrayK:
+        Ptr = arrayType(t); break;        /*ç±»åž‹ä¸ºæ•°ç»„ç±»åž‹*/
+    case RecordK:
+        Ptr = recordType(t); break;       /*ç±»åž‹ä¸ºè®°å½•ç±»åž‹*/
+    case IntegerK:
+        Ptr = intPtr; break;              /*ç±»åž‹ä¸ºæ•´æ•°ç±»åž‹*/
+    case CharK:
+        Ptr = charPtr; break;             /*ç±»åž‹ä¸ºå­—ç¬¦ç±»åž‹*/
+    }
+    return Ptr;
 }
 
 
-/************************************************************/
-/* º¯ÊýÃû  nameType                                         */
-/* ¹¦  ÄÜ  ¸Ãº¯ÊýÓÃÀ´ÔÚ·ûºÅ±íÖÐÑ°ÕÒÒÑ¶¨ÒåµÄÀàÐÍÃû×Ö         */
-/* Ëµ  Ã÷  µ÷ÓÃÑ°ÕÒ±íÏîµØÖ·º¯ÊýFindEntry£¬·µ»ØÕÒµ½µÄ±íÏîµØÖ·*/
-/*		   Ö¸Õëentry¡£Èç¹ûpresentÎªFALSE£¬Ôò·¢ÉúÎÞÉùÃ÷´íÎó¡£*/
-/*         Èç¹û·ûºÅ±íÖÐµÄ¸Ã±êÊ¶·ûµÄÊôÐÔÐÅÏ¢²»ÊÇÀàÐÍ£¬Ôò·ÇÀà */
-/*         ÐÍ±êÊ¶·û¡£¸Ãº¯Êý·µ»ØÖ¸ÕëÖ¸Ïò·ûºÅ±íÖÐµÄ¸Ã±êÊ¶·ûµÄ */
-/*	       ÀàÐÍÄÚ²¿±íÊ¾¡£								    */
-/************************************************************/
+
+
+
+///åœ¨ç¬¦å·è¡¨ä¸­å¯»æ‰¾å·²å®šä¹‰çš„ç±»åž‹åå­—
+///
+///è°ƒç”¨å¯»æ‰¾è¡¨é¡¹åœ°å€å‡½æ•°FindEntryï¼Œè¿”å›žæ‰¾åˆ°çš„è¡¨é¡¹åœ°å€æŒ‡é’ˆentryã€‚
+///
+///å¦‚æžœpresentä¸ºFALSEï¼Œåˆ™å‘ç”Ÿæ— å£°æ˜Žé”™è¯¯ã€‚
+///
+///å¦‚æžœç¬¦å·è¡¨ä¸­çš„è¯¥æ ‡è¯†ç¬¦çš„å±žæ€§ä¿¡æ¯ä¸æ˜¯ç±»åž‹ï¼Œåˆ™éžç±»åž‹æ ‡è¯†ç¬¦ã€‚
+///
+///è¯¥å‡½æ•°è¿”å›žæŒ‡é’ˆæŒ‡å‘ç¬¦å·è¡¨ä¸­çš„è¯¥æ ‡è¯†ç¬¦çš„ç±»åž‹å†…éƒ¨è¡¨ç¤ºã€‚
+/// @param t <#t description#>
 TypeIR* nameType(TreeNode* t)
 {
-	TypeIR* Ptr = NULL;
-	SymbTable* entry = NULL;
-	int present;
+    TypeIR* Ptr = NULL;
+    SymbTable* entry = NULL;
+    int present;
 
 
-	/*ÀàÐÍ±êÊ¶·ûÒ²ÐèÒªÍùÇ°²ã²éÕÒ*/
-	present = FindEntry(t->attr.type_name, &entry);
+//    ç±»åž‹æ ‡è¯†ç¬¦ä¹Ÿéœ€è¦å¾€å‰å±‚æŸ¥æ‰¾
+    present = FindEntry(t->attr.type_name, &entry);
 
-	if (present == TRUE)
-	{
-		/*¼ì²é¸Ã±êÊ¶·ûÊÇ·ñÎªÀàÐÍ±êÊ¶·û*/
-		if (entry->attrIR.kind != typeKind)
-			ErrorPrompt(t->lineno, t->attr.type_name, (char*)"used before typed!\n");
-		else
-			Ptr = entry->attrIR.idtype;
-	}
-	else/*Ã»ÓÐÕÒµ½¸Ã±êÊ¶·û*/
-	{
-		ErrorPrompt(t->lineno, t->attr.type_name, (char*)"type name is not declared!\n");
-	}
-	return Ptr;
+    if (present == TRUE)
+    {
+//        æ£€æŸ¥è¯¥æ ‡è¯†ç¬¦æ˜¯å¦ä¸ºç±»åž‹æ ‡è¯†ç¬¦
+        if (entry->attrIR.kind != typeKind)
+            ErrorPrompt(t->lineno, t->attr.type_name, (char*)"used before typed!\n");
+        else
+            Ptr = entry->attrIR.idtype;
+    }
+//    æ²¡æœ‰æ‰¾åˆ°è¯¥æ ‡è¯†ç¬¦
+    else
+    {
+        ErrorPrompt(t->lineno, t->attr.type_name, (char*)"type name is not declared!\n");
+    }
+    return Ptr;
 }
 
-/************************************************************/
-/* º¯ÊýÃû  arrayType                                        */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦ÀíÊý×éÀàÐÍµÄÄÚ²¿±íÊ¾                     */
-/* Ëµ  Ã÷  ÀàÐÍÎªÊý×éÀàÐÍÊ±£¬ÐèÒª¼ì²éÏÂ±êÊÇ·ñºÏ·¨¡£         */
-/************************************************************/
+
+
+
+/// å¤„ç†æ•°ç»„ç±»åž‹çš„å†…éƒ¨è¡¨ç¤º
+///
+/// ç±»åž‹ä¸ºæ•°ç»„ç±»åž‹æ—¶ï¼Œéœ€è¦æ£€æŸ¥ä¸‹æ ‡æ˜¯å¦åˆæ³•ã€‚
+/// @param t <#t description#>
 TypeIR* arrayType(TreeNode* t)
 {
-	TypeIR* Ptr0 = NULL;
-	TypeIR* Ptr1 = NULL;
-	TypeIR* Ptr = NULL;
+    TypeIR* Ptr0 = NULL;
+    TypeIR* Ptr1 = NULL;
+    TypeIR* Ptr = NULL;
 
-	/*¼ì²éÊý×éÉÏ½çÊÇ·ñÐ¡ÓÚÏÂ½ç*/
-	if ((t->attr.ArrayAttr.low) > (t->attr.ArrayAttr.up))
-	{
-		ErrorPrompt(t->lineno, (char *)"", (char*)"array subscript error!\n");
-		Error = TRUE;
-	}
-	else
-	{
-		Ptr0 = TypeProcess(t, IntegerK);
-		/*µ÷ÓÃÀàÐÍ·ÖÎöº¯Êý£¬´¦ÀíÏÂ±êÀàÐÍ*/
-		Ptr1 = TypeProcess(t, t->attr.ArrayAttr.childtype);
-		/*µ÷ÓÃÀàÐÍ·ÖÎöº¯Êý£¬´¦ÀíÔªËØÀàÐÍ*/
-		Ptr = NewTy(arrayTy);
-		/*Ö¸ÏòÒ»ÐÂ´´½¨µÄÀàÐÍÐÅÏ¢±í*/
-		Ptr->size = ((t->attr.ArrayAttr.up) - (t->attr.ArrayAttr.low) + 1) * (Ptr1->size);
-		/*¼ÆËã±¾ÀàÐÍ³¤¶È*/
+//    æ£€æŸ¥æ•°ç»„ä¸Šç•Œæ˜¯å¦å°äºŽä¸‹ç•Œ
+    if ((t->attr.ArrayAttr.low) > (t->attr.ArrayAttr.up))
+    {
+        ErrorPrompt(t->lineno, (char *)"", (char*)"array subscript error!\n");
+        Error = TRUE;
+    }
+    else
+    {
+        Ptr0 = TypeProcess(t, IntegerK);
+//        è°ƒç”¨ç±»åž‹åˆ†æžå‡½æ•°ï¼Œå¤„ç†ä¸‹æ ‡ç±»åž‹
+        Ptr1 = TypeProcess(t, t->attr.ArrayAttr.childtype);
+//        è°ƒç”¨ç±»åž‹åˆ†æžå‡½æ•°ï¼Œå¤„ç†å…ƒç´ ç±»åž‹
+        Ptr = NewTy(arrayTy);
+//        æŒ‡å‘ä¸€æ–°åˆ›å»ºçš„ç±»åž‹ä¿¡æ¯è¡¨
+        Ptr->size = ((t->attr.ArrayAttr.up) - (t->attr.ArrayAttr.low) + 1) * (Ptr1->size);
+//        è®¡ç®—æœ¬ç±»åž‹é•¿åº¦
 
-/*ÌîÐ´ÆäËûÐÅÏ¢*/
-		Ptr->More.ArrayAttr.indexTy = Ptr0;
-		Ptr->More.ArrayAttr.elemTy = Ptr1;
-		Ptr->More.ArrayAttr.low = t->attr.ArrayAttr.low;
-		Ptr->More.ArrayAttr.up = t->attr.ArrayAttr.up;
-	}
-	return Ptr;
+//        å¡«å†™å…¶ä»–ä¿¡æ¯
+        Ptr->More.ArrayAttr.indexTy = Ptr0;
+        Ptr->More.ArrayAttr.elemTy = Ptr1;
+        Ptr->More.ArrayAttr.low = t->attr.ArrayAttr.low;
+        Ptr->More.ArrayAttr.up = t->attr.ArrayAttr.up;
+    }
+    return Ptr;
 }
 
 
-/************************************************************/
-/* º¯ÊýÃû  recordType                                       */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦Àí¼ÇÂ¼ÀàÐÍµÄÄÚ²¿±íÊ¾                     */
-/* Ëµ  Ã÷  ÀàÐÍÎª¼ÇÂ¼ÀàÐÍÊ±£¬ÊÇÓÉ¼ÇÂ¼Ìå×é³ÉµÄ¡£ÆäÄÚ²¿½ÚµãÐè */
-/*		   Òª°üÀ¨3¸öÐÅÏ¢:Ò»ÊÇ¿Õ¼ä´óÐ¡size£»¶þÊÇÀàÐÍÖÖÀà±êÖ¾ */
-/*		   recordTy;ÈýÊÇÌå²¿·ÖµÄ½ÚµãµØÖ·body¡£¼ÇÂ¼ÀàÐÍÖÐµÄ  */
-/*		   ÓòÃû¶¼ÊÇ±êÊ¶·ûµÄ¶¨ÒåÐÔ³öÏÖ£¬Òò´ËÐèÒª¼ÇÂ¼ÆäÊôÐÔ¡£ */
-/************************************************************/
+
+
+
+///å¤„ç†è®°å½•ç±»åž‹çš„å†…éƒ¨è¡¨ç¤º
+///
+///ç±»åž‹ä¸ºè®°å½•ç±»åž‹æ—¶ï¼Œæ˜¯ç”±è®°å½•ä½“ç»„æˆçš„ã€‚
+///
+///å…¶å†…éƒ¨èŠ‚ç‚¹éœ€è¦åŒ…æ‹¬3ä¸ªä¿¡æ¯:
+///
+///ä¸€æ˜¯ç©ºé—´å¤§å°sizeï¼›
+///
+///äºŒæ˜¯ç±»åž‹ç§ç±»æ ‡å¿— recordTy;
+///
+///ä¸‰æ˜¯ä½“éƒ¨åˆ†çš„èŠ‚ç‚¹åœ°å€bodyã€‚
+///
+///è®°å½•ç±»åž‹ä¸­çš„åŸŸåéƒ½æ˜¯æ ‡è¯†ç¬¦çš„å®šä¹‰æ€§å‡ºçŽ°ï¼Œå› æ­¤éœ€è¦è®°å½•å…¶å±žæ€§ã€‚
+/// @param t <#t description#>
 TypeIR* recordType(TreeNode* t)
 {
-	TypeIR* Ptr = NewTy(recordTy);  /*ÐÂ½¨¼ÇÂ¼ÀàÐÍµÄ½Úµã*/
+    TypeIR* Ptr = NewTy(recordTy);  /*æ–°å»ºè®°å½•ç±»åž‹çš„èŠ‚ç‚¹*/
 
-	t = t->child[0];                /*´ÓÓï·¨ÊýµÄ¶ù×Ó½Úµã¶ÁÈ¡ÓòÐÅÏ¢*/
+    t = t->child[0];                /*ä»Žè¯­æ³•æ•°çš„å„¿å­èŠ‚ç‚¹è¯»å–åŸŸä¿¡æ¯*/
 
 
-	fieldChain* Ptr2 = NULL;
-	fieldChain* Ptr1 = NULL;
+    fieldChain* Ptr2 = NULL;
+    fieldChain* Ptr1 = NULL;
 
-	fieldChain* body = NULL;
+    fieldChain* body = NULL;
 
-	while (t != NULL)				/*Ñ­»·´¦Àí*/
-	{
-		/*ÌîÐ´ptr2Ö¸ÏòµÄÄÚÈÝ½Úµã*
-		 *´Ë´¦Ñ­»·ÊÇ´¦Àí´ËÖÖÇé¿öint a,b; */
-		for (int i = 0; i < t->idnum; i++)
-		{
-			/*ÉêÇëÐÂµÄÓòÀàÐÍµ¥Ôª½á¹¹Ptr2*/
-			Ptr2 = NewBody();
-			if (body == NULL)
-				body = Ptr1 = Ptr2;
+    while (t != NULL)       //å¾ªçŽ¯å¤„ç†
+    {
+//        å¡«å†™ptr2æŒ‡å‘çš„å†…å®¹èŠ‚ç‚¹
+//        æ­¤å¤„å¾ªçŽ¯æ˜¯å¤„ç†æ­¤ç§æƒ…å†µint a,b;
+        for (int i = 0; i < t->idnum; i++)
+        {
+//            ç”³è¯·æ–°çš„åŸŸç±»åž‹å•å…ƒç»“æž„Ptr2
+            Ptr2 = NewBody();
+            if (body == NULL)
+                body = Ptr1 = Ptr2;
 
-			/*ÌîÐ´Ptr2µÄ¸÷¸ö³ÉÔ±ÄÚÈÝ*/
-			strcpy(Ptr2->id, t->name[i]);
-			Ptr2->UnitType = TypeProcess(t, t->kind.dec);
+//            å¡«å†™Ptr2çš„å„ä¸ªæˆå‘˜å†…å®¹
+            strcpy(Ptr2->id, t->name[i]);
+            Ptr2->UnitType = TypeProcess(t, t->kind.dec);
 
-			Ptr2->Next = NULL;
+            Ptr2->Next = NULL;
 
-			/*Èç¹ûPtr1!=Ptr2£¬ÄÇÃ´½«Ö¸ÕëºóÒÆ*/
-			if (Ptr2 != Ptr1)
-			{
-				/*¼ÆËãÐÂÉêÇëµÄµ¥Ôªoff*/
-				Ptr2->off = (Ptr1->off) + (Ptr1->UnitType->size);
-				Ptr1->Next = Ptr2;
-				Ptr1 = Ptr2;
-			}
-		}
-		/*´¦ÀíÍêÍ¬ÀàÐÍµÄ±äÁ¿ºó£¬È¡Óï·¨Ê÷µÄÐÖµÜ½Úµã*/
-		t = t->sibling;
-	}
+//            å¦‚æžœPtr1!=Ptr2ï¼Œé‚£ä¹ˆå°†æŒ‡é’ˆåŽç§»
+            if (Ptr2 != Ptr1)
+            {
+//                è®¡ç®—æ–°ç”³è¯·çš„å•å…ƒoff
+                Ptr2->off = (Ptr1->off) + (Ptr1->UnitType->size);
+                Ptr1->Next = Ptr2;
+                Ptr1 = Ptr2;
+            }
+        }
+//        å¤„ç†å®ŒåŒç±»åž‹çš„å˜é‡åŽï¼Œå–è¯­æ³•æ ‘çš„å…„å¼ŸèŠ‚ç‚¹
+        t = t->sibling;
+    }
 
-	/*´¦Àí¼ÇÂ¼ÀàÐÍÄÚ²¿½á¹¹*/
+//    å¤„ç†è®°å½•ç±»åž‹å†…éƒ¨ç»“æž„
 
-	/*È¡Ptr2µÄoffÎª×îºóÕû¸ö¼ÇÂ¼µÄsize*/
-	Ptr->size = Ptr2->off + (Ptr2->UnitType->size);
-	/*½«ÓòÁ´Á´Èë¼ÇÂ¼ÀàÐÍµÄbody²¿·Ö*/
-	Ptr->More.body = body;
+//    å–Ptr2çš„offä¸ºæœ€åŽæ•´ä¸ªè®°å½•çš„size*/
+    Ptr->size = Ptr2->off + (Ptr2->UnitType->size);
+//    å°†åŸŸé“¾é“¾å…¥è®°å½•ç±»åž‹çš„bodyéƒ¨åˆ†*/
+    Ptr->More.body = body;
 
-	return Ptr;
+    return Ptr;
 }
 
 
 
-/************************************************************/
+//MARK: - å£°æ˜Žçš„è¯­ä¹‰åˆ†æž
 
 
-
-/*********************ÉùÃ÷µÄÓïÒå·ÖÎö*************************/
-
-/************************************************************/
-/* º¯ÊýÃû  TypeDecPart                                      */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦ÀíÀàÐÍÉùÃ÷µÄÓïÒå·ÖÎö                     */
-/* Ëµ  Ã÷  Óöµ½ÀàÐÍTÊ±£¬¹¹ÔìÆäÄÚ²¿½ÚµãTPtr£»¶ÔÓÚ"idname=T"¹¹*/
-/*		   Ôì·ûºÅ±íÏî£»¼ì²é±¾²ãÀàÐÍÉùÃ÷ÖÐÊÇ·ñÓÐÖØ¸´¶¨Òå´íÎó.*/
-/************************************************************/
+/// å¤„ç†ç±»åž‹å£°æ˜Žçš„è¯­ä¹‰åˆ†æž
+///
+///é‡åˆ°ç±»åž‹Tæ—¶ï¼Œæž„é€ å…¶å†…éƒ¨èŠ‚ç‚¹TPtrï¼›å¯¹äºŽ"idname=T"æž„é€ ç¬¦å·è¡¨é¡¹ï¼›æ£€æŸ¥æœ¬å±‚ç±»åž‹å£°æ˜Žä¸­æ˜¯å¦æœ‰é‡å¤å®šä¹‰é”™è¯¯.
+/// @param t <#t description#>
 void TypeDecPart(TreeNode* t)
 {
-	int present = FALSE;
+    int present = FALSE;
 
-	AttributeIR  attrIr;
+    AttributeIR  attrIr;
 
-	SymbTable* entry = NULL;
+    SymbTable* entry = NULL;
 
-	/*ÌíÊôÐÔ×÷Îª²ÎÊý*/
-	attrIr.kind = typeKind;
+//    æ·»å±žæ€§ä½œä¸ºå‚æ•°
+    attrIr.kind = typeKind;
 
-	/*±éÀúÓï·¨Ê÷µÄÐÖµÜ½Úµã*/
-	while (t != NULL)
-	{
-		/*µ÷ÓÃ¼ÇÂ¼ÊôÐÔº¯Êý£¬·µ»ØÊÇ·ñÖØ¸´ÉùÃ÷´íºÍÈë¿ÚµØÖ·*/
-		present = Enter(t->name[0], &attrIr, &entry);
+//    éåŽ†è¯­æ³•æ ‘çš„å…„å¼ŸèŠ‚ç‚¹
+    while (t != NULL)
+    {
+//        è°ƒç”¨è®°å½•å±žæ€§å‡½æ•°ï¼Œè¿”å›žæ˜¯å¦é‡å¤å£°æ˜Žé”™å’Œå…¥å£åœ°å€
+        present = Enter(t->name[0], &attrIr, &entry);
 
-		if (present != FALSE)
-		{
-			ErrorPrompt(t->lineno, t->name[0], (char*)"is repetation declared!\n");
-			entry = NULL;
-		}
-		else
-			entry->attrIR.idtype = TypeProcess(t, t->kind.dec);
-		t = t->sibling;
-	}
+        if (present != FALSE)
+        {
+            ErrorPrompt(t->lineno, t->name[0], (char*)"is repetation declared!\n");
+            entry = NULL;
+        }
+        else
+            entry->attrIR.idtype = TypeProcess(t, t->kind.dec);
+        t = t->sibling;
+    }
 }
 
 
-/************************************************************/
-/* º¯ÊýÃû  VarDecPart                                       */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦Àí±äÁ¿ÉùÃ÷µÄÓïÒå·ÖÎö                     */
-/* Ëµ  Ã÷  µ÷ÓÃ±äÁ¿´¦Àí·ÖÎöº¯Êý                             */
-/************************************************************/
+
+/// å¤„ç†å˜é‡å£°æ˜Žçš„è¯­ä¹‰åˆ†æž
+///
+/// è°ƒç”¨å˜é‡å¤„ç†åˆ†æžå‡½æ•°
+/// @param t <#t description#>
 void VarDecPart(TreeNode* t)
 {
-	varDecList(t);
+    varDecList(t);
 }
 
-/************************************************************/
-/* º¯ÊýÃû  varDecList                                       */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦Àí±äÁ¿ÉùÃ÷µÄÓïÒå·ÖÎö                     */
-/* Ëµ  Ã÷  µ±Óöµ½±äÁ¿±íÊ¶·ûidÊ±£¬°ÑidµÇ¼Çµ½·ûºÅ±íÖÐ£»¼ì²éÖØ */
-/*         ¸´ÐÔ¶¨Òå£»Óöµ½ÀàÐÍÊ±£¬¹¹ÔìÆäÄÚ²¿±íÊ¾¡£           */
-/************************************************************/
+
+
+/// å¤„ç†å˜é‡å£°æ˜Žçš„è¯­ä¹‰åˆ†æž
+///
+/// å½“é‡åˆ°å˜é‡è¡¨è¯†ç¬¦idæ—¶ï¼ŒæŠŠidç™»è®°åˆ°ç¬¦å·è¡¨ä¸­ï¼›æ£€æŸ¥é‡å¤æ€§å®šä¹‰ï¼›é‡åˆ°ç±»åž‹æ—¶ï¼Œæž„é€ å…¶å†…éƒ¨è¡¨ç¤ºã€‚
+/// @param t <#t description#>
 void  varDecList(TreeNode* t)
 {
-	AttributeIR  attrIr;
-	int present = FALSE;
+    AttributeIR  attrIr;
+    int present = FALSE;
 
-	SymbTable* entry = NULL;
+    SymbTable* entry = NULL;
 
-	while (t != NULL)	/*Ñ­»·¹ý³Ì*/
-	{
-		attrIr.kind = varKind;
-		for (int i = 0; i < (t->idnum); i++)
-		{
-			attrIr.idtype = TypeProcess(t, t->kind.dec);
+    while (t != NULL)    //å¾ªçŽ¯è¿‡ç¨‹
+    {
+        attrIr.kind = varKind;
+        for (int i = 0; i < (t->idnum); i++)
+        {
+            attrIr.idtype = TypeProcess(t, t->kind.dec);
 
-			/*ÅÐ¶ÏÊ¶Öµ²Î»¹ÊÇ±ä²Îacess(dir,indir)*/
-			if (t->attr.ProcAttr.paramt == varparamType)
-			{
-				attrIr.More.VarAttr.access = indir;
-				attrIr.More.VarAttr.level = Level;
-				/*¼ÆËãÐÎ²ÎµÄÆ«ÒÆ*/
+//            åˆ¤æ–­è¯†å€¼å‚è¿˜æ˜¯å˜å‚acess(dir,indir)
+            if (t->attr.ProcAttr.paramt == varparamType)
+            {
+                attrIr.More.VarAttr.access = indir;
+                attrIr.More.VarAttr.level = Level;
+//                è®¡ç®—å½¢å‚çš„åç§»
 
-				attrIr.More.VarAttr.off = Off;
-				Off = Off + 1;
-			}/*Èç¹ûÊÇ±ä²Î£¬ÔòÆ«ÒÆ¼Ó1*/
+                attrIr.More.VarAttr.off = Off;
+                Off = Off + 1;
+//                å¦‚æžœæ˜¯å˜å‚ï¼Œåˆ™åç§»åŠ 1
 
-			else
-			{
-				attrIr.More.VarAttr.access = dir;
-				attrIr.More.VarAttr.level = Level;
-				/*¼ÆËãÖµ²ÎµÄÆ«ÒÆ*/
-				if (attrIr.idtype != NULL)
+            }
+            
+            else
+            {
+                attrIr.More.VarAttr.access = dir;
+                attrIr.More.VarAttr.level = Level;
+//                è®¡ç®—å€¼å‚çš„åç§»
+                if (attrIr.idtype != NULL)
 
-				{
-					attrIr.More.VarAttr.off = Off;
-					Off = Off + (attrIr.idtype->size);
-				}
-			}/*ÆäËûÇé¿ö¾ùÎªÖµ²Î£¬Æ«ÒÆ¼Ó±äÁ¿ÀàÐÍµÄsize*/
+                {
+                    attrIr.More.VarAttr.off = Off;
+                    Off = Off + (attrIr.idtype->size);
+                }
+//                å…¶ä»–æƒ…å†µå‡ä¸ºå€¼å‚ï¼Œåç§»åŠ å˜é‡ç±»åž‹çš„size
+            }
 
-			/*µÇ¼Ç¸Ã±äÁ¿µÄÊôÐÔ¼°Ãû×Ö,²¢·µ»ØÆäÀàÐÍÄÚ²¿Ö¸Õë*/
-			present = Enter(t->name[i], &attrIr, &entry);
-			if (present != FALSE)
-			{
-				ErrorPrompt(t->lineno, t->name[i], (char*)" is defined repetation!\n");
-			}
-			else
-				t->table[i] = entry;
+//            ç™»è®°è¯¥å˜é‡çš„å±žæ€§åŠåå­—,å¹¶è¿”å›žå…¶ç±»åž‹å†…éƒ¨æŒ‡é’ˆ
+            present = Enter(t->name[i], &attrIr, &entry);
+            if (present != FALSE)
+            {
+                ErrorPrompt(t->lineno, t->name[i], (char*)" is defined repetation!\n");
+            }
+            else
+                t->table[i] = entry;
 
-		}
-		if (t != NULL)
-			t = t->sibling;
-	}
+        }
+        if (t != NULL)
+            t = t->sibling;
+    }
 
-	/*Èç¹ûÊÇÖ÷³ÌÐò£¬Ôò¼ÇÂ¼´ËÊ±Æ«ÒÆ£¬ÓÃÓÚÄ¿±ê´úÂëÉú³ÉÊ±µÄdisplayOff*/
-	if (Level == 0)
-	{
-		mainOff = Off;
-		/*´æ´¢Ö÷³ÌÐòARµÄdisplay±íµÄÆ«ÒÆµ½È«¾Ö±äÁ¿*/
-		StoreNoff = Off;
-	}
-	/*Èç¹û²»ÊÇÖ÷³ÌÐò£¬Ôò¼ÇÂ¼´ËÊ±Æ«ÒÆ£¬ÓÃÓÚÏÂÃæÌîÐ´¹ý³ÌÐÅÏ¢±íµÄnoffÐÅÏ¢*/
-	else
-		savedOff = Off;
+//    å¦‚æžœæ˜¯ä¸»ç¨‹åºï¼Œåˆ™è®°å½•æ­¤æ—¶åç§»ï¼Œç”¨äºŽç›®æ ‡ä»£ç ç”Ÿæˆæ—¶çš„displayOff
+    if (Level == 0)
+    {
+        mainOff = Off;
+//        å­˜å‚¨ä¸»ç¨‹åºARçš„displayè¡¨çš„åç§»åˆ°å…¨å±€å˜é‡
+//        StoreNoff = Off;s
+    }
+//    å¦‚æžœä¸æ˜¯ä¸»ç¨‹åºï¼Œåˆ™è®°å½•æ­¤æ—¶åç§»ï¼Œç”¨äºŽä¸‹é¢å¡«å†™è¿‡ç¨‹ä¿¡æ¯è¡¨çš„noffä¿¡æ¯
+    else
+        savedOff = Off;
 
 }
 
-/************************************************************/
-/* º¯ÊýÃû  procDec                                      */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦Àí¹ý³ÌÉùÃ÷µÄÓïÒå·ÖÎö                     */
-/* Ëµ  Ã÷  ÔÚµ±Ç°²ã·ûºÅ±íÖÐÌîÐ´¹ý³Ì±êÊ¶·ûµÄÊôÐÔ£»ÔÚÐÂ²ã·ûºÅ */
-/*         ±íÖÐÌîÐ´ÐÎ²Î±êÊ¶·ûµÄÊôÐÔ¡£						*/
-/************************************************************/
+/// å¤„ç†è¿‡ç¨‹å£°æ˜Žçš„è¯­ä¹‰åˆ†æž
+///
+/// åœ¨å½“å‰å±‚ç¬¦å·è¡¨ä¸­å¡«å†™è¿‡ç¨‹æ ‡è¯†ç¬¦çš„å±žæ€§ï¼›åœ¨æ–°å±‚ç¬¦å·è¡¨ä¸­å¡«å†™å½¢å‚æ ‡è¯†ç¬¦çš„å±žæ€§ã€‚
+/// @param t <#t description#>
 void  procDecPart(TreeNode* t)
 {
-	TreeNode* p = t;
-	SymbTable* entry = HeadProcess(t);   /*´¦Àí¹ý³ÌÍ·*/
+    TreeNode* p = t;
+    SymbTable* entry = HeadProcess(t);
+//    å¤„ç†è¿‡ç¨‹å¤´
 
-	t = t->child[1];
-	/*Èç¹û¹ý³ÌÄÚ²¿´æÔÚÉùÃ÷²¿·Ö£¬Ôò´¦ÀíÉùÃ÷²¿·Ö*/
-	while (t != NULL)
-	{
-		switch (t->nodekind)
-		{
-		case  TypeK:     TypeDecPart(t->child[0]);  break;
-		case  VarK:     VarDecPart(t->child[0]);   break;
+    t = t->child[1];
+//    å¦‚æžœè¿‡ç¨‹å†…éƒ¨å­˜åœ¨å£°æ˜Žéƒ¨åˆ†ï¼Œåˆ™å¤„ç†å£°æ˜Žéƒ¨åˆ†
+    while (t != NULL)
+    {
+        switch (t->nodekind)
+        {
+        case  TypeK:     TypeDecPart(t->child[0]);  break;
+        case  VarK:     VarDecPart(t->child[0]);   break;
 
-			/*Èç¹ûÉùÃ÷²¿·ÖÓÐº¯ÊýÉùÃ÷£¬ÔòÌø³öÑ­»·£¬ÏÈÌîÐ´noffºÍmoffµÈÐÅÏ¢£¬*
-			 *ÔÙ´¦Àíº¯ÊýÉùÃ÷µÄÑ­»·´¦Àí£¬·ñÔòÎÞ·¨±£´ænoffºÍmoffµÄÖµ¡£      */
-		case  ProcDecK:  break;
-		default:
-			ErrorPrompt(t->lineno, (char*)"", (char*)"no this node kind in syntax tree!");
-			break;
-		}
-		if (t->nodekind == ProcDecK)
-			break;
-		else
-			t = t->sibling;
-	}
-	entry->attrIR.More.ProcAttr.nOff = savedOff;
-	entry->attrIR.More.ProcAttr.mOff = entry->attrIR.More.ProcAttr.nOff + entry->attrIR.More.ProcAttr.level + 1;
-	/*¹ý³Ì»î¶¯¼ÇÂ¼µÄ³¤¶ÈµÈÓÚnOff¼ÓÉÏdisplay±íµÄ³¤¶È*
-	 *diplay±íµÄ³¤¶ÈµÈÓÚ¹ý³ÌËùÔÚ²ãÊý¼ÓÒ»           */
+//      å¦‚æžœå£°æ˜Žéƒ¨åˆ†æœ‰å‡½æ•°å£°æ˜Žï¼Œåˆ™è·³å‡ºå¾ªçŽ¯ï¼Œå…ˆå¡«å†™noffå’Œmoffç­‰ä¿¡æ¯ï¼Œ
+//      å†å¤„ç†å‡½æ•°å£°æ˜Žçš„å¾ªçŽ¯å¤„ç†ï¼Œå¦åˆ™æ— æ³•ä¿å­˜noffå’Œmoffçš„å€¼ã€‚
+        case  ProcDecK:  break;
+        default:
+            ErrorPrompt(t->lineno, (char*)"", (char*)"no this node kind in syntax tree!");
+            break;
+        }
+        if (t->nodekind == ProcDecK)
+            break;
+        else
+            t = t->sibling;
+    }
+    entry->attrIR.More.ProcAttr.nOff = savedOff;
+    entry->attrIR.More.ProcAttr.mOff = entry->attrIR.More.ProcAttr.nOff + entry->attrIR.More.ProcAttr.level + 1;
+//    è¿‡ç¨‹æ´»åŠ¨è®°å½•çš„é•¿åº¦ç­‰äºŽnOffåŠ ä¸Šdisplayè¡¨çš„é•¿åº¦
+//     diplayè¡¨çš„é•¿åº¦ç­‰äºŽè¿‡ç¨‹æ‰€åœ¨å±‚æ•°åŠ ä¸€
 
-	 /*´¦Àí³ÌÐòµÄÉùÃ÷²¿·Ö*/
-	while (t != NULL)
-	{
-		procDecPart(t);
-		t = t->sibling;
-	}
-	t = p;
-	Body(t->child[2]);/*´¦ÀíBlock*/
+//    å¤„ç†ç¨‹åºçš„å£°æ˜Žéƒ¨åˆ†
+    while (t != NULL)
+    {
+        procDecPart(t);
+        t = t->sibling;
+    }
+    t = p;
+    Body(t->child[2]);//å¤„ç†Block
 
-	/*º¯Êý²¿·Ö½áÊø£¬É¾³ý½øÈëÐÎ²ÎÊ±£¬ÐÂ½¨Á¢µÄ·ûºÅ±í*/
-	if (Level != -1)
-		DestroyTable();/*½áÊøµ±Ç°scope*/
+//    å‡½æ•°éƒ¨åˆ†ç»“æŸï¼Œåˆ é™¤è¿›å…¥å½¢å‚æ—¶ï¼Œæ–°å»ºç«‹çš„ç¬¦å·è¡¨
+    if (Level != -1)
+        DestroyTable();//ç»“æŸå½“å‰scope
 }
 
 
-/************************************************************/
-/* º¯ÊýÃû  HeadProcess                                      */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦Àíº¯ÊýÍ·µÄÓïÒå·ÖÎö                       */
-/* Ëµ  Ã÷  ÔÚµ±Ç°²ã·ûºÅ±íÖÐÌîÐ´º¯Êý±êÊ¶·ûµÄÊôÐÔ£»ÔÚÐÂ²ã·ûºÅ */
-/*         ±íÖÐÌîÐ´ÐÎ²Î±êÊ¶·ûµÄÊôÐÔ¡£ÆäÖÐ¹ý³ÌµÄ´óÐ¡ºÍ´úÂë¶¼ */
-/*         ÐèÒÔºó»ØÌî¡£                                     */
-/************************************************************/
+
+
+/// å¤„ç†å‡½æ•°å¤´çš„è¯­ä¹‰åˆ†æž
+/// @param t <#t description#>
+///
+/// åœ¨å½“å‰å±‚ç¬¦å·è¡¨ä¸­å¡«å†™å‡½æ•°æ ‡è¯†ç¬¦çš„å±žæ€§ï¼›åœ¨æ–°å±‚ç¬¦å·è¡¨ä¸­å¡«å†™å½¢å‚æ ‡è¯†ç¬¦çš„å±žæ€§ã€‚å…¶ä¸­è¿‡ç¨‹çš„å¤§å°å’Œä»£ç éƒ½éœ€ä»¥åŽå›žå¡«ã€‚
 SymbTable* HeadProcess(TreeNode* t)
 {
-	AttributeIR attrIr;
-	int present = FALSE;
-	SymbTable* entry = NULL;
+    AttributeIR attrIr;
+    int present = FALSE;
+    SymbTable* entry = NULL;
 
-	/*ÌîÊôÐÔ*/
-	attrIr.kind = procKind;
-	attrIr.idtype = NULL;
-	attrIr.More.ProcAttr.level = Level + 1;
+//    å¡«å±žæ€§
+    attrIr.kind = procKind;
+    attrIr.idtype = NULL;
+    attrIr.More.ProcAttr.level = Level + 1;
 
-	if (t != NULL)
-	{
-		/*µÇ¼Çº¯ÊýµÄ·ûºÅ±íÏî*/
-		present = Enter(t->name[0], &attrIr, &entry);
-		t->table[0] = entry;
-		/*´¦ÀíÐÎ²ÎÉùÃ÷±í*/
-	}
-	entry->attrIR.More.ProcAttr.param = ParaDecList(t);
+    if (t != NULL)
+    {
+//        ç™»è®°å‡½æ•°çš„ç¬¦å·è¡¨é¡¹
+        present = Enter(t->name[0], &attrIr, &entry);
+        t->table[0] = entry;
+//        å¤„ç†å½¢å‚å£°æ˜Žè¡¨
+    }
+    entry->attrIR.More.ProcAttr.param = ParaDecList(t);
 
-	return entry;
+    return entry;
 }
 
-/************************************************************/
-/* º¯ÊýÃû  ParaDecList                                      */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦Àíº¯ÊýÍ·ÖÐµÄ²ÎÊýÉùÃ÷µÄÓïÒå·ÖÎö           */
-/* Ëµ  Ã÷  ÔÚÐÂµÄ·ûºÅ±íÖÐµÇ¼ÇËùÓÐÐÎ²ÎµÄ±íÏî£¬¹¹ÔìÐÎ²Î±íÏîµÄ */
-/*         µØÖ·±í£¬²¢ÓÐparaÖ¸ÏòÆä¡£                         */
-/************************************************************/
+/// å¤„ç†å‡½æ•°å¤´ä¸­çš„å‚æ•°å£°æ˜Žçš„è¯­ä¹‰åˆ†æž
+/// @param t <#t description#>
+///
+///åœ¨æ–°çš„ç¬¦å·è¡¨ä¸­ç™»è®°æ‰€æœ‰å½¢å‚çš„è¡¨é¡¹ï¼Œæž„é€ å½¢å‚è¡¨é¡¹çš„åœ°å€è¡¨ï¼Œå¹¶æœ‰paraæŒ‡å‘å…¶ã€‚
 ParamTable* ParaDecList(TreeNode* t)
 {
-	TreeNode* p = NULL;
-	ParamTable* Ptr1 = NULL;
-	ParamTable* Ptr2 = NULL;
-	ParamTable* head = NULL;
+    TreeNode* p = NULL;
+    ParamTable* Ptr1 = NULL;
+    ParamTable* Ptr2 = NULL;
+    ParamTable* head = NULL;
 
-	if (t != NULL)
-	{
-		if (t->child[0] != NULL)
-			p = t->child[0];   	/*³ÌÐòÉùÃ÷½ÚµãµÄµÚÒ»¸ö¶ù×Ó½Úµã*/
+    if (t != NULL)
+    {
+        if (t->child[0] != NULL)
+            p = t->child[0];    //ç¨‹åºå£°æ˜ŽèŠ‚ç‚¹çš„ç¬¬ä¸€ä¸ªå„¿å­èŠ‚ç‚¹
 
-		CreatTable();			/*½øÈëÐÂµÄ¾Ö²¿»¯Çø*/
+        CreatTable();           //è¿›å…¥æ–°çš„å±€éƒ¨åŒ–åŒº
 
-		Off = 7;                /*×Ó³ÌÐòÖÐµÄ±äÁ¿³õÊ¼Æ«ÒÆÉèÎª8*/
+        Off = 7;                //å­ç¨‹åºä¸­çš„å˜é‡åˆå§‹åç§»è®¾ä¸º8
 
-		VarDecPart(p);			/*±äÁ¿ÉùÃ÷²¿·Ö*/
+        VarDecPart(p);          //å˜é‡å£°æ˜Žéƒ¨åˆ†
 
-		SymbTable* Ptr0 = scope[Level];
+        SymbTable* Ptr0 = scope[Level];
 
-		while (Ptr0 != NULL)         /*Ö»Òª²»Îª¿Õ£¬¾Í·ÃÎÊÆäÐÖµÜ½Úµã*/
-		{
-			/*¹¹ÔìÐÎ²Î·ûºÅ±í£¬²¢Ê¹ÆäÁ¬½ÓÖÁ·ûºÅ±íµÄparamÏî*/
-			Ptr2 = NewParam();
-			if (head == NULL)
-				head = Ptr1 = Ptr2;
-			//Ptr0->attrIR.More.VarAttr.isParam = true;
-			Ptr2->entry = Ptr0;
-			Ptr2->next = NULL;
+        while (Ptr0 != NULL)    //åªè¦ä¸ä¸ºç©ºï¼Œå°±è®¿é—®å…¶å…„å¼ŸèŠ‚ç‚¹
+        {
+//            æž„é€ å½¢å‚ç¬¦å·è¡¨ï¼Œå¹¶ä½¿å…¶è¿žæŽ¥è‡³ç¬¦å·è¡¨çš„paramé¡¹
+            Ptr2 = NewParam();
+            if (head == NULL)
+                head = Ptr1 = Ptr2;
+            //Ptr0->attrIR.More.VarAttr.isParam = true;
+            Ptr2->entry = Ptr0;
+            Ptr2->next = NULL;
 
-			if (Ptr2 != Ptr1)
-			{
-				Ptr1->next = Ptr2;
-				Ptr1 = Ptr2;
-			}
-			Ptr0 = Ptr0->next;
-		}
-	}
-	return head;   /*·µ»ØÐÎ²Î·ûºÅ±íµÄÍ·Ö¸Õë*/
+            if (Ptr2 != Ptr1)
+            {
+                Ptr1->next = Ptr2;
+                Ptr1 = Ptr2;
+            }
+            Ptr0 = Ptr0->next;
+        }
+    }
+    return head;   /*è¿”å›žå½¢å‚ç¬¦å·è¡¨çš„å¤´æŒ‡é’ˆ*/
 }
 
+///MARK: - æ‰§è¡Œä½“éƒ¨åˆ†çš„è¯­ä¹‰åˆ†æž
 
-/*******************Ö´ÐÐÌå²¿·ÖµÄÓïÒå·ÖÎö*********************/
 
-/************************************************************/
-/* º¯ÊýÃû  Body                                             */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦ÀíÖ´ÐÐÌå²¿·ÖµÄÓïÒå·ÖÎö                   */
-/* Ëµ  Ã÷  TINY±àÒëÏµÍ³µÄÖ´ÐÐÌå²¿·Ö¼´ÎªÓï¾äÐòÁÐ£¬¹ÊÖ»Ðè´¦Àí */
-/*         Óï¾äÐòÁÐ²¿·Ö¡£                                   */
-/************************************************************/
+/// å¤„ç†æ‰§è¡Œä½“éƒ¨åˆ†çš„è¯­ä¹‰åˆ†æž
+///
+///TINYç¼–è¯‘ç³»ç»Ÿçš„æ‰§è¡Œä½“éƒ¨åˆ†å³ä¸ºè¯­å¥åºåˆ—ï¼Œæ•…åªéœ€å¤„ç† è¯­å¥åºåˆ—éƒ¨åˆ†ã€‚
+/// @param t <#t description#>
 void Body(TreeNode* t)
 {
-	if (t->nodekind == StmLK)
-	{
-		TreeNode* p = t->child[0];
-		while (p != NULL)
-		{
-			statement(p);  /*µ÷ÓÃÓï¾ä×´Ì¬´¦Àíº¯Êý*/
-			p = p->sibling;   /*ÒÀ´Î¶ÁÈëÓï·¨Ê÷Óï¾äÐòÁÐµÄÐÖµÜ½Úµã*/
-		}
-	}
+    if (t->nodekind == StmLK)
+    {
+        TreeNode* p = t->child[0];
+        while (p != NULL)
+        {
+            statement(p);   //è°ƒç”¨è¯­å¥çŠ¶æ€å¤„ç†å‡½æ•°
+            p = p->sibling; //ä¾æ¬¡è¯»å…¥è¯­æ³•æ ‘è¯­å¥åºåˆ—çš„å…„å¼ŸèŠ‚ç‚¹
+        }
+    }
 }
 
 
-/************************************************************/
-/* º¯ÊýÃû  statement                                        */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦ÀíÓï¾ä×´Ì¬                               */
-/* Ëµ  Ã÷  ¸ù¾ÝÓï·¨Ê÷½ÚµãÖÐµÄkindÏîÅÐ¶ÏÓ¦¸Ã×ªÏò´¦ÀíÄÄ¸öÓï¾ä */
-/*         ÀàÐÍº¯Êý¡£                                       */
-/************************************************************/
+/// å¤„ç†è¯­å¥çŠ¶æ€
+///
+/// æ ¹æ®è¯­æ³•æ ‘èŠ‚ç‚¹ä¸­çš„kindé¡¹åˆ¤æ–­åº”è¯¥è½¬å‘å¤„ç†å“ªä¸ªè¯­å¥ç±»åž‹å‡½æ•°ã€‚
+/// @param t <#t description#>
 void statement(TreeNode* t)
 {
-	switch (t->kind.stmt)
-	{
-	case IfK:			ifstatment(t); break;
-	case WhileK:		whilestatement(t); break;
-	case AssignK:		assignstatement(t); break;
-	case ReadK:		    readstatement(t); break;
-	case WriteK:		writestatement(t); break;
-	case CallK:		    callstatement(t); break;
-	case ReturnK:		returnstatement(t); break;
-	default:
-		ErrorPrompt(t->lineno, (char*)"", (char*)"statement type error!\n");
-		break;
-	}
+    switch (t->kind.stmt)
+    {
+    case IfK:            ifstatment(t); break;
+    case WhileK:        whilestatement(t); break;
+    case AssignK:        assignstatement(t); break;
+    case ReadK:            readstatement(t); break;
+    case WriteK:        writestatement(t); break;
+    case CallK:            callstatement(t); break;
+    case ReturnK:        returnstatement(t); break;
+    default:
+        ErrorPrompt(t->lineno, (char*)"", (char*)"statement type error!\n");
+        break;
+    }
 }
 
-/************************************************************/
-/* º¯ÊýÃû  Expr                                             */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦Àí±í´ïÊ½µÄ·ÖÎö                           */
-/* Ëµ  Ã÷  ±í´ïÊ½ÓïÒå·ÖÎöµÄÖØµãÊÇ¼ì²éÔËËã·ÖÁ¿µÄÀàÐÍÏàÈÝÐÔ£¬ */
-/*         Çó±í´ïÊ½µÄÀàÐÍ¡£ÆäÖÐ²ÎÊýEkindÓÃÀ´±íÊ¾Êµ²ÎÊÇ±ä²Î  */
-/*         »¹ÊÇÖµ²Î¡£    	                                */
-/************************************************************/
+
+/// å¤„ç†è¡¨è¾¾å¼çš„åˆ†æž
+///
+/// è¡¨è¾¾å¼è¯­ä¹‰åˆ†æžçš„é‡ç‚¹æ˜¯æ£€æŸ¥è¿ç®—åˆ†é‡çš„ç±»åž‹ç›¸å®¹æ€§ï¼Œæ±‚è¡¨è¾¾å¼çš„ç±»åž‹ã€‚å…¶ä¸­å‚æ•°Ekindç”¨æ¥è¡¨ç¤ºå®žå‚æ˜¯å˜å‚è¿˜æ˜¯å€¼å‚ã€‚
+/// @param t <#t description#>
+/// @param Ekind <#Ekind description#>
 TypeIR* Expr(TreeNode* t, AccessKind* Ekind)
 {
-	int present = FALSE;
-	SymbTable* entry = NULL;
+    int present = FALSE;
+    SymbTable* entry = NULL;
 
-	TypeIR* Eptr0 = NULL;
-	TypeIR* Eptr1 = NULL;
-	TypeIR* Eptr = NULL;
-	if (t != NULL)
-		switch (t->kind.exp)
-		{
-		case ConstK:
-			Eptr = TypeProcess(t, IntegerK);
-			Eptr->kind = intTy;
-			if (Ekind != NULL)
-				(*Ekind) = dir;   /*Ö±½Ó±äÁ¿*/
-			break;
-		case VariK:
-			/*Var = idµÄÇéÐÎ*/
-			if (t->child[0] == NULL)
-			{
-				/*ÔÚ·ûºÅ±íÖÐ²éÕÒ´Ë±êÊ¶·û*/
-				present = FindEntry(t->name[0], &entry);
-				t->table[0] = entry;
+    TypeIR* Eptr0 = NULL;
+    TypeIR* Eptr1 = NULL;
+    TypeIR* Eptr = NULL;
+    if (t != NULL)
+        switch (t->kind.exp)
+        {
+        case ConstK:
+            Eptr = TypeProcess(t, IntegerK);
+            Eptr->kind = intTy;
+            if (Ekind != NULL)
+                (*Ekind) = dir;   //ç›´æŽ¥å˜é‡
+            break;
+        case VariK:
+//            Var = idçš„æƒ…å½¢
+            if (t->child[0] == NULL)
+            {
+//                åœ¨ç¬¦å·è¡¨ä¸­æŸ¥æ‰¾æ­¤æ ‡è¯†ç¬¦
+                present = FindEntry(t->name[0], &entry);
+                t->table[0] = entry;
 
-				if (present != FALSE)
-				{   /*id²»ÊÇ±äÁ¿*/
-					if (FindAttr(entry).kind != varKind)
-					{
-						ErrorPrompt(t->lineno, t->name[0], (char*)"is not variable error!\n");
-						Eptr = NULL;
-					}
-					else
-					{
-						Eptr = entry->attrIR.idtype;
-						if (Ekind != NULL)
-							(*Ekind) = indir;  /*¼ä½Ó±äÁ¿*/
+                if (present != FALSE)
+                {
+//                    idä¸æ˜¯å˜é‡
+                    if (FindAttr(entry).kind != varKind)
+                    {
+                        ErrorPrompt(t->lineno, t->name[0], (char*)"is not variable error!\n");
+                        Eptr = NULL;
+                    }
+                    else
+                    {
+                        Eptr = entry->attrIR.idtype;
+                        if (Ekind != NULL)
+                            (*Ekind) = indir;
+//                        é—´æŽ¥å˜é‡
 
-					}
-				}
-				else /*±êÊ¶·ûÎÞÉùÃ÷*/
-				{
-					ErrorPrompt(t->lineno, t->name[0], (char*)"is not declarations!\n");
-				}
+                    }
+                }
+                else
+//                    æ ‡è¯†ç¬¦æ— å£°æ˜Ž
+                {
+                    ErrorPrompt(t->lineno, t->name[0], (char*)"is not declarations!\n");
+                }
 
-			}
-			else/*Var = Var0[E]µÄÇéÐÎ*/
-			{
-				if (t->attr.ExpAttr.varkind == ArrayMembV)
-					Eptr = arrayVar(t);
-				else /*Var = Var0.idµÄÇéÐÎ*/
-					if (t->attr.ExpAttr.varkind == FieldMembV)
-						Eptr = recordVar(t);
-			}
-			break;
-		case OpK:
-			/*µÝ¹éµ÷ÓÃ¶ù×Ó½Úµã*/
-			Eptr0 = Expr(t->child[0], NULL);
-			if (Eptr0 == NULL)
-				return NULL;
-			Eptr1 = Expr(t->child[1], NULL);
-			if (Eptr1 == NULL)
-				return NULL;
+            }
+            else
+//                Var = Var0[E]çš„æƒ…å½¢
+            {
+                if (t->attr.ExpAttr.varkind == ArrayMembV)
+                    Eptr = arrayVar(t);
+                else if (t->attr.ExpAttr.varkind == FieldMembV)
+//                    Var = Var0.idçš„æƒ…å½¢
+                {
+                    Eptr = recordVar(t);
+                }
+            }
+            break;
+        case OpK:
+//            é€’å½’è°ƒç”¨å„¿å­èŠ‚ç‚¹
+            Eptr0 = Expr(t->child[0], NULL);
+            if (Eptr0 == NULL)
+                return NULL;
+            Eptr1 = Expr(t->child[1], NULL);
+            if (Eptr1 == NULL)
+                return NULL;
 
-			/*ÀàÐÍÅÐ±ð*/
-			present = Compat(Eptr0, Eptr1);
-			if (present != FALSE)
-			{
-				switch (t->attr.ExpAttr.op)
-				{
-				case LT:
-				case EQ:
-					Eptr = boolPtr;
-					break;  /*Ìõ¼þ±í´ïÊ½*/
-				case PLUS:
-				case MINUS:
-				case TIMES:
-				case OVER:
-					Eptr = intPtr;
-					break;  /*ËãÊý±í´ïÊ½*/
-				}
-				if (Ekind != NULL)
-					(*Ekind) = dir; /*Ö±½Ó±äÁ¿*/
-			}
-			else
-				ErrorPrompt(t->lineno, (char*)"", (char*)"operator is not compat!\n");
-			break;
-		}
-	return Eptr;
+//            ç±»åž‹åˆ¤åˆ«
+            present = Compat(Eptr0, Eptr1);
+            if (present != FALSE)
+            {
+                switch (t->attr.ExpAttr.op)
+                {
+                case LT:
+                case EQ:
+                    Eptr = boolPtr;
+                    break;  //æ¡ä»¶è¡¨è¾¾å¼
+                case PLUS:
+                case MINUS:
+                case TIMES:
+                case OVER:
+                    Eptr = intPtr;
+                    break;  //ç®—æ•°è¡¨è¾¾å¼
+                }
+                if (Ekind != NULL)
+                    (*Ekind) = dir; //ç›´æŽ¥å˜é‡
+            }
+            else
+                ErrorPrompt(t->lineno, (char*)"", (char*)"operator is not compat!\n");
+            break;
+        }
+    return Eptr;
 }
 
 
-/************************************************************/
-/* º¯ÊýÃû  arrayVar                                         */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦ÀíÊý×é±äÁ¿µÄÏÂ±ê·ÖÎö                     */
-/* Ëµ  Ã÷  ¼ì²évar := var0[E]ÖÐvar0ÊÇ²»ÊÇÊý×éÀàÐÍ±äÁ¿£¬EÊÇ²»*/
-/*         ÊÇºÍÊý×éµÄÏÂ±ê±äÁ¿ÀàÐÍÆ¥Åä¡£                     */
-/************************************************************/
+
+
+/// å¤„ç†æ•°ç»„å˜é‡çš„ä¸‹æ ‡åˆ†æž
+///
+/// æ£€æŸ¥var := var0[E]ä¸­var0æ˜¯ä¸æ˜¯æ•°ç»„ç±»åž‹å˜é‡ï¼ŒEæ˜¯ä¸æ˜¯å’Œæ•°ç»„çš„ä¸‹æ ‡å˜é‡ç±»åž‹åŒ¹é…ã€‚
+/// @param t <#t description#>
 TypeIR* arrayVar(TreeNode* t)
 {
-	int present = FALSE;
-	SymbTable* entry = NULL;
+    int present = FALSE;
+    SymbTable* entry = NULL;
 
-	TypeIR* Eptr0 = NULL;
-	TypeIR* Eptr1 = NULL;
-	TypeIR* Eptr = NULL;
+    TypeIR* Eptr0 = NULL;
+    TypeIR* Eptr1 = NULL;
+    TypeIR* Eptr = NULL;
 
 
-	/*ÔÚ·ûºÅ±íÖÐ²éÕÒ´Ë±êÊ¶·û*/
+//    åœ¨ç¬¦å·è¡¨ä¸­æŸ¥æ‰¾æ­¤æ ‡è¯†ç¬¦
 
-	present = FindEntry(t->name[0], &entry);
-	t->table[0] = entry;
-	/*ÕÒµ½*/
-	if (present != FALSE)
-	{
-		/*Var0²»ÊÇ±äÁ¿*/
-		if (FindAttr(entry).kind != varKind)
-		{
-			ErrorPrompt(t->lineno, t->name[0], (char*)"is not variable error!\n");
-			Eptr = NULL;
-		}
-		else/*Var0²»ÊÇÊý×éÀàÐÍ±äÁ¿*/
-			if (FindAttr(entry).idtype != NULL)
-				if (FindAttr(entry).idtype->kind != arrayTy)
-				{
-					ErrorPrompt(t->lineno, t->name[0], (char*)"is not array variable error !\n");
-					Eptr = NULL;
-				}
-				else
-				{
-					/*¼ì²éEµÄÀàÐÍÊÇ·ñÓëÏÂ±êÀàÐÍÏà·û*/
-					Eptr0 = entry->attrIR.idtype->More.ArrayAttr.indexTy;
-					if (Eptr0 == NULL)
-						return NULL;
-					Eptr1 = Expr(t->child[0], NULL);//intPtr;
-					if (Eptr1 == NULL)
-						return NULL;
-					present = Compat(Eptr0, Eptr1);
-					if (present != TRUE)
-					{
-						ErrorPrompt(t->lineno, (char*)"", (char*)"type is not matched with the array member error !\n");
-						Eptr = NULL;
-					}
-					else
-						Eptr = entry->attrIR.idtype->More.ArrayAttr.elemTy;
-				}
-	}
-	else/*±êÊ¶·ûÎÞÉùÃ÷*/
-		ErrorPrompt(t->lineno, t->name[0], (char*)"is not declarations!\n");
-	return Eptr;
+    present = FindEntry(t->name[0], &entry);
+    t->table[0] = entry;
+//    æ‰¾åˆ°
+    if (present != FALSE)
+    {
+//        Var0ä¸æ˜¯å˜é‡
+        if (FindAttr(entry).kind != varKind)
+        {
+            ErrorPrompt(t->lineno, t->name[0], (char*)"is not variable error!\n");
+            Eptr = NULL;
+        }
+        else    //Var0ä¸æ˜¯æ•°ç»„ç±»åž‹å˜é‡
+            if (FindAttr(entry).idtype != NULL)
+                if (FindAttr(entry).idtype->kind != arrayTy)
+                {
+                    ErrorPrompt(t->lineno, t->name[0], (char*)"is not array variable error !\n");
+                    Eptr = NULL;
+                }
+                else
+                {
+//                    æ£€æŸ¥Eçš„ç±»åž‹æ˜¯å¦ä¸Žä¸‹æ ‡ç±»åž‹ç›¸ç¬¦
+                    Eptr0 = entry->attrIR.idtype->More.ArrayAttr.indexTy;
+                    if (Eptr0 == NULL)
+                        return NULL;
+                    Eptr1 = Expr(t->child[0], NULL);//intPtr;
+                    if (Eptr1 == NULL)
+                        return NULL;
+                    present = Compat(Eptr0, Eptr1);
+                    if (present != TRUE)
+                    {
+                        ErrorPrompt(t->lineno, (char*)"", (char*)"type is not matched with the array member error !\n");
+                        Eptr = NULL;
+                    }
+                    else
+                        Eptr = entry->attrIR.idtype->More.ArrayAttr.elemTy;
+                }
+    }
+    else    //æ ‡è¯†ç¬¦æ— å£°æ˜Ž
+        ErrorPrompt(t->lineno, t->name[0], (char*)"is not declarations!\n");
+    return Eptr;
 }
 
 
-/************************************************************/
-/* º¯ÊýÃû  recordVar                                        */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦Àí¼ÇÂ¼±äÁ¿ÖÐÓòµÄ·ÖÎö                     */
-/* Ëµ  Ã÷  ¼ì²évar:=var0.idÖÐµÄvar0ÊÇ²»ÊÇ¼ÇÂ¼ÀàÐÍ±äÁ¿£¬idÊÇ */
-/*         ²»ÊÇ¸Ã¼ÇÂ¼ÀàÐÍÖÐµÄÓò³ÉÔ±¡£                       */
-/************************************************************/
+/// å¤„ç†è®°å½•å˜é‡ä¸­åŸŸçš„åˆ†æž
+///
+/// æ£€æŸ¥var:=var0.idä¸­çš„var0æ˜¯ä¸æ˜¯è®°å½•ç±»åž‹å˜é‡ï¼Œidæ˜¯ä¸æ˜¯è¯¥è®°å½•ç±»åž‹ä¸­çš„åŸŸæˆå‘˜ã€‚
+/// @param t <#t description#>
 TypeIR* recordVar(TreeNode* t)
 {
-	int present = FALSE;
-	int result = TRUE;
-	SymbTable* entry = NULL;
+    int present = FALSE;
+    int result = TRUE;
+    SymbTable* entry = NULL;
 
-	TypeIR* Eptr0 = NULL;
-	TypeIR* Eptr1 = NULL;
-	TypeIR* Eptr = NULL;
-	fieldchain* currentP = NULL;
+    TypeIR* Eptr0 = NULL;
+    TypeIR* Eptr1 = NULL;
+    TypeIR* Eptr = NULL;
+    fieldchain* currentP = NULL;
 
 
-	/*ÔÚ·ûºÅ±íÖÐ²éÕÒ´Ë±êÊ¶·û*/
-	present = FindEntry(t->name[0], &entry);
-	t->table[0] = entry;
-	/*ÕÒµ½*/
-	if (present != FALSE)
-	{
-		/*Var0²»ÊÇ±äÁ¿*/
-		if (FindAttr(entry).kind != varKind)
-		{
-			ErrorPrompt(t->lineno, t->name[0], (char*)"is not variable error!\n");
-			Eptr = NULL;
-		}
-		else/*Var0²»ÊÇ¼ÇÂ¼ÀàÐÍ±äÁ¿*/
-			if (FindAttr(entry).idtype->kind != recordTy)
-			{
-				ErrorPrompt(t->lineno, t->name[0], (char*)"is not record variable error !\n");
-				Eptr = NULL;
-			}
-			else/*¼ì²éidÊÇ·ñÊÇºÏ·¨ÓòÃû*/
-			{
-				Eptr0 = entry->attrIR.idtype;
-				currentP = Eptr0->More.body;
-				while ((currentP != NULL) && (result != FALSE))
-				{
-					result = strcmp(t->child[0]->name[0], currentP->id);
-					/*Èç¹ûÏàµÈ*/
-					if (result == FALSE)
-						Eptr = currentP->UnitType;
-					else
-						currentP = currentP->Next;
-				}
-				if (currentP == NULL)
-					if (result != FALSE)
-					{
-						ErrorPrompt(t->child[0]->lineno, t->child[0]->name[0],
-							(char*)"is not field type!\n");
-						Eptr = NULL;
-					}
-					else/*Èç¹ûidÊÇÊý×é±äÁ¿*/
-						if (t->child[0]->child[0] != NULL)
-							Eptr = arrayVar(t->child[0]);
-			}
-	}
-	else/*±êÊ¶·ûÎÞÉùÃ÷*/
-		ErrorPrompt(t->lineno, t->name[0], (char*)"is not declarations!\n");
-	return Eptr;
+//    åœ¨ç¬¦å·è¡¨ä¸­æŸ¥æ‰¾æ­¤æ ‡è¯†ç¬¦
+    present = FindEntry(t->name[0], &entry);
+    t->table[0] = entry;
+//    æ‰¾åˆ°
+    if (present != FALSE)
+    {
+//        Var0ä¸æ˜¯å˜é‡
+        if (FindAttr(entry).kind != varKind)
+        {
+            ErrorPrompt(t->lineno, t->name[0], (char*)"is not variable error!\n");
+            Eptr = NULL;
+        }
+        else    //Var0ä¸æ˜¯è®°å½•ç±»åž‹å˜é‡
+            if (FindAttr(entry).idtype->kind != recordTy)
+            {
+                ErrorPrompt(t->lineno, t->name[0], (char*)"is not record variable error !\n");
+                Eptr = NULL;
+            }
+            else
+//                æ£€æŸ¥idæ˜¯å¦æ˜¯åˆæ³•åŸŸå
+            {
+                Eptr0 = entry->attrIR.idtype;
+                currentP = Eptr0->More.body;
+                while ((currentP != NULL) && (result != FALSE))
+                {
+                    result = strcmp(t->child[0]->name[0], currentP->id);
+//                    å¦‚æžœç›¸ç­‰
+                    if (result == FALSE)
+                        Eptr = currentP->UnitType;
+                    else
+                        currentP = currentP->Next;
+                }
+                if (currentP == NULL)
+                    if (result != FALSE)
+                    {
+                        ErrorPrompt(t->child[0]->lineno, t->child[0]->name[0],
+                            (char*)"is not field type!\n");
+                        Eptr = NULL;
+                    }
+                    else    //å¦‚æžœidæ˜¯æ•°ç»„å˜é‡
+                        if (t->child[0]->child[0] != NULL)
+                            Eptr = arrayVar(t->child[0]);
+            }
+    }
+    else    //æ ‡è¯†ç¬¦æ— å£°æ˜Ž
+        ErrorPrompt(t->lineno, t->name[0], (char*)"is not declarations!\n");
+    return Eptr;
 }
 
 
 /************************************************************/
-/* º¯ÊýÃû  assignstatement                                  */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦Àí¸³ÖµÓï¾ä·ÖÎö                           */
-/* Ëµ  Ã÷  ¸³ÖµÓï¾äµÄÓïÒå·ÖÎöµÄÖØµãÊÇ¼ì²é¸³ÖµºÅÁ½¶Ë·ÖÁ¿µÄÀà */
-/*         ÐÍÏàÈÝÐÔ¡£    	                                */
+/* å‡½æ•°å  assignstatement                                  */
+/* åŠŸ  èƒ½  è¯¥å‡½æ•°                           */
+/* è¯´  æ˜Ž                                          */
 /************************************************************/
+
+
+/// å¤„ç†èµ‹å€¼è¯­å¥åˆ†æž
+///
+/// èµ‹å€¼è¯­å¥çš„è¯­ä¹‰åˆ†æžçš„é‡ç‚¹æ˜¯æ£€æŸ¥èµ‹å€¼å·ä¸¤ç«¯åˆ†é‡çš„ç±»åž‹ç›¸å®¹æ€§ã€‚
+/// @param t <#t description#>
 void assignstatement(TreeNode* t)
 {
-	SymbTable* entry = NULL;
+    SymbTable* entry = NULL;
 
-	int present = FALSE;
-	TypeIR* ptr = NULL;
-	TypeIR* Eptr = NULL;
+    int present = FALSE;
+    TypeIR* ptr = NULL;
+    TypeIR* Eptr = NULL;
 
-	TreeNode* child1 = NULL;
-	TreeNode* child2 = NULL;
+    TreeNode* child1 = NULL;
+    TreeNode* child2 = NULL;
 
-	child1 = t->child[0];
-	child2 = t->child[1];
+    child1 = t->child[0];
+    child2 = t->child[1];
 
-	if (child1->child[0] == NULL)
-	{
-		/*ÔÚ·ûºÅ±íÖÐ²éÕÒ´Ë±êÊ¶·û*/
-		present = FindEntry(child1->name[0], &entry);
+    if (child1->child[0] == NULL)
+    {
+//        åœ¨ç¬¦å·è¡¨ä¸­æŸ¥æ‰¾æ­¤æ ‡è¯†ç¬¦
+        present = FindEntry(child1->name[0], &entry);
 
-		if (present != FALSE)
-		{   /*id²»ÊÇ±äÁ¿*/
-			if (FindAttr(entry).kind != varKind)
-			{
-				ErrorPrompt(child1->lineno, child1->name[0], (char*)"is not variable error!\n");
-				Eptr = NULL;
-			}
-			else
-			{
-				Eptr = entry->attrIR.idtype;
-				child1->table[0] = entry;
-			}
-		}
-		else /*±êÊ¶·ûÎÞÉùÃ÷*/
-			ErrorPrompt(child1->lineno, child1->name[0], (char*)"is not declarations!\n");
-	}
-	else/*Var0[E]µÄÇéÐÎ*/
-	{
-		if (child1->attr.ExpAttr.varkind == ArrayMembV)
-			Eptr = arrayVar(child1);
-		else /*Var0.idµÄÇéÐÎ*/
-			if (child1->attr.ExpAttr.varkind == FieldMembV)
-				Eptr = recordVar(child1);
-	}
-	if (Eptr != NULL)
-	{
-		if ((t->nodekind == StmtK) && (t->kind.stmt == AssignK))
-		{
-			/*¼ì²éÊÇ²»ÊÇ¸³ÖµºÅÁ½²à ÀàÐÍµÈ¼Û*/
-			ptr = Expr(child2, NULL);
-			if (!Compat(ptr, Eptr))
-				ErrorPrompt(t->lineno, (char*)"", (char*)"ass_expression error!\n");
-		}
-		/*¸³ÖµÓï¾äÖÐ²»ÄÜ³öÏÖº¯Êýµ÷ÓÃ*/
-	}
+        if (present != FALSE)
+        {
+//            idä¸æ˜¯å˜é‡
+            if (FindAttr(entry).kind != varKind)
+            {
+                ErrorPrompt(child1->lineno, child1->name[0], (char*)"is not variable error!\n");
+                Eptr = NULL;
+            }
+            else
+            {
+                Eptr = entry->attrIR.idtype;
+                child1->table[0] = entry;
+            }
+        }
+        else    //æ ‡è¯†ç¬¦æ— å£°æ˜Ž
+            ErrorPrompt(child1->lineno, child1->name[0], (char*)"is not declarations!\n");
+    }
+    else
+//        Var0[E]çš„æƒ…å½¢
+    {
+        if (child1->attr.ExpAttr.varkind == ArrayMembV)
+            Eptr = arrayVar(child1);
+        else    //Var0.idçš„æƒ…å½¢
+            if (child1->attr.ExpAttr.varkind == FieldMembV)
+                Eptr = recordVar(child1);
+    }
+    if (Eptr != NULL)
+    {
+        if ((t->nodekind == StmtK) && (t->kind.stmt == AssignK))
+        {
+//            æ£€æŸ¥æ˜¯ä¸æ˜¯èµ‹å€¼å·ä¸¤ä¾§ ç±»åž‹ç­‰ä»·
+            ptr = Expr(child2, NULL);
+            if (!Compat(ptr, Eptr))
+                ErrorPrompt(t->lineno, (char*)"", (char*)"ass_expression error!\n");
+        }
+//        èµ‹å€¼è¯­å¥ä¸­ä¸èƒ½å‡ºçŽ°å‡½æ•°è°ƒç”¨
+    }
 }
 
 /************************************************************/
-/* º¯ÊýÃû  callstatement                                    */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦Àíº¯Êýµ÷ÓÃÓï¾ä·ÖÎö                       */
-/* Ëµ  Ã÷  º¯Êýµ÷ÓÃÓï¾äµÄÓïÒå·ÖÎöÊ×ÏÈ¼ì²é·ûºÅ±íÇó³öÆäÊôÐÔÖÐ */
-/*         µÄParam²¿·Ö£¨ÐÎ²Î·ûºÅ±íÏîµØÖ·±í£©£¬²¢ÓÃËü¼ì²éÐÎ²Î*/
-/*         ºÍÊµ²ÎÖ®¼äµÄ¶ÔÓ¦¹ØÏµÊÇ·ñÕýÈ·¡£                   */
+/* å‡½æ•°å  callstatement                                    */
+/* åŠŸ  èƒ½  è¯¥å‡½æ•°                       */
+/* è¯´  æ˜Ž  å‡½æ•°è°ƒç”¨è¯­å¥çš„è¯­ä¹‰åˆ†æžé¦–å…ˆæ£€æŸ¥ç¬¦å·è¡¨æ±‚å‡ºå…¶å±žæ€§ä¸­ */
+/*         çš„Paraméƒ¨åˆ†ï¼ˆå½¢å‚ç¬¦å·è¡¨é¡¹åœ°å€è¡¨ï¼‰ï¼Œå¹¶ç”¨å®ƒæ£€æŸ¥å½¢å‚*/
+/*         å’Œå®žå‚ä¹‹é—´çš„å¯¹åº”å…³ç³»æ˜¯å¦æ­£ç¡®ã€‚                   */
 /************************************************************/
+
+
+/// å¤„ç†å‡½æ•°è°ƒç”¨è¯­å¥åˆ†æž
+///
+///å‡½æ•°è°ƒç”¨è¯­å¥çš„è¯­ä¹‰åˆ†æžé¦–å…ˆæ£€æŸ¥ç¬¦å·è¡¨æ±‚å‡ºå…¶å±žæ€§ä¸­çš„Paraméƒ¨åˆ†ï¼ˆå½¢å‚ç¬¦å·è¡¨é¡¹åœ°å€è¡¨ï¼‰ï¼Œå¹¶ç”¨å®ƒæ£€æŸ¥å½¢å‚å’Œå®žå‚ä¹‹é—´çš„å¯¹åº”å…³ç³»æ˜¯å¦æ­£ç¡®ã€‚
+/// @param t <#t description#>
 void callstatement(TreeNode* t)
 {
-	AccessKind  Ekind;
-	int present = FALSE;
-	SymbTable* entry = NULL;
-	TreeNode* p = NULL;
+    AccessKind  Ekind;
+    int present = FALSE;
+    SymbTable* entry = NULL;
+    TreeNode* p = NULL;
 
-	/*ÓÃid¼ì²éÕû¸ö·ûºÅ±í*/
-	present = FindEntry(t->child[0]->name[0], &entry);
-	t->child[0]->table[0] = entry;
+//    ç”¨idæ£€æŸ¥æ•´ä¸ªç¬¦å·è¡¨
+    present = FindEntry(t->child[0]->name[0], &entry);
+    t->child[0]->table[0] = entry;
 
-	/*Î´²éµ½±íÊ¾º¯ÊýÎÞÉùÃ÷*/
-	if (present == FALSE)
-	{
-		ErrorPrompt(t->lineno, t->child[0]->name[0], (char*)"function is not declarationed!\n");
-	}
-	else
-		/*id²»ÊÇº¯ÊýÃû*/
-		if (FindAttr(entry).kind != procKind)
-			ErrorPrompt(t->lineno, t->name[0], (char*)"is not function name!\n");
-		else/*ÐÎÊµ²ÎÆ¥Åä*/
-		{
-			p = t->child[1];
-			/*paramPÖ¸ÏòÐÎ²Î·ûºÅ±íµÄ±íÍ·*/
-			ParamTable* paramP = FindAttr(entry).More.ProcAttr.param;
-			while ((p != NULL) && (paramP != NULL))
-			{
-				SymbTable* paraEntry = paramP->entry;
-				TypeIR* Etp = Expr(p, &Ekind);/*Êµ²Î*/
-				/*²ÎÊýÀà±ð²»Æ¥Åä*/
-				if ((FindAttr(paraEntry).More.VarAttr.access == indir) && (Ekind == dir))
-					ErrorPrompt(p->lineno, (char*)"", (char*)"param kind is not match!\n");
-				else
-					/*²ÎÊýÀàÐÍ²»Æ¥Åä*/
-					if ((FindAttr(paraEntry).idtype) != Etp)
-						ErrorPrompt(p->lineno, (char*)"", (char*)"param type is not match!\n");
-				p = p->sibling;
-				paramP = paramP->next;
-			}
-			/*²ÎÊý¸öÊý²»Æ¥Åä*/
-			if ((p != NULL) || (paramP != NULL))
-				ErrorPrompt(t->child[1]->lineno, (char*)"", (char*)"param num is not match!\n");
-		}
+//    æœªæŸ¥åˆ°è¡¨ç¤ºå‡½æ•°æ— å£°æ˜Ž
+    if (present == FALSE)
+    {
+        ErrorPrompt(t->lineno, t->child[0]->name[0], (char*)"function is not declarationed!\n");
+    }
+    else
+//        idä¸æ˜¯å‡½æ•°å
+        if (FindAttr(entry).kind != procKind)
+            ErrorPrompt(t->lineno, t->name[0], (char*)"is not function name!\n");
+        else
+//            å½¢å®žå‚åŒ¹é…
+        {
+            p = t->child[1];
+//            paramPæŒ‡å‘å½¢å‚ç¬¦å·è¡¨çš„è¡¨å¤´
+            ParamTable* paramP = FindAttr(entry).More.ProcAttr.param;
+            while ((p != NULL) && (paramP != NULL))
+            {
+                SymbTable* paraEntry = paramP->entry;
+                TypeIR* Etp = Expr(p, &Ekind);  //å®žå‚
+//                å‚æ•°ç±»åˆ«ä¸åŒ¹é…
+                if ((FindAttr(paraEntry).More.VarAttr.access == indir) && (Ekind == dir))
+                    ErrorPrompt(p->lineno, (char*)"", (char*)"param kind is not match!\n");
+                else
+//                    å‚æ•°ç±»åž‹ä¸åŒ¹é…
+                    if ((FindAttr(paraEntry).idtype) != Etp)
+                        ErrorPrompt(p->lineno, (char*)"", (char*)"param type is not match!\n");
+                p = p->sibling;
+                paramP = paramP->next;
+            }
+//            å‚æ•°ä¸ªæ•°ä¸åŒ¹é…
+            if ((p != NULL) || (paramP != NULL))
+                ErrorPrompt(t->child[1]->lineno, (char*)"", (char*)"param num is not match!\n");
+        }
 }
 
 
-/************************************************************/
-/* º¯ÊýÃû  ifstatement                                      */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦ÀíÌõ¼þÓï¾ä·ÖÎö                           */
-/* Ëµ  Ã÷  ·ÖÎöÓï·¨Ê÷µÄÈý¸ö¶ù×Ó½Úµã                         */
-/************************************************************/
+/// å¤„ç†æ¡ä»¶è¯­å¥åˆ†æž
+///
+///åˆ†æžè¯­æ³•æ ‘çš„ä¸‰ä¸ªå„¿å­èŠ‚ç‚¹
+/// @param t <#t description#>
 void ifstatment(TreeNode* t)
 {
-	AccessKind* Ekind = NULL;
-	TypeIR* Etp = Expr(t->child[0], Ekind);
-	if (Etp != NULL)
-		/*´¦ÀíÌõ¼þ±í´ïÊ½*/
-		if (Etp->kind != boolTy)
-			ErrorPrompt(t->lineno, (char*)"", (char*)"condition expressrion error!\n");  /*Âß¼­±í´ïÊ½´íÎó*/
-		else
-		{
-			TreeNode* p = t->child[1];
-			/*´¦ÀíthenÓï¾äÐòÁÐ²¿·Ö*/
-			while (p != NULL)
-			{
-				statement(p);
-				p = p->sibling;
-			}
-			t = t->child[2];		/*±ØÓÐÈý¶ù×Ó*/
-			/*´¦ÀíelseÓï¾ä²»·Ö*/
-			while (t != NULL)
-			{
-				statement(t);
-				t = t->sibling;
-			}
-		}
+    AccessKind* Ekind = NULL;
+    TypeIR* Etp = Expr(t->child[0], Ekind);
+    if (Etp != NULL)
+//        å¤„ç†æ¡ä»¶è¡¨è¾¾å¼
+        if (Etp->kind != boolTy)
+            ErrorPrompt(t->lineno, (char*)"", (char*)"condition expressrion error!\n");
+//            é€»è¾‘è¡¨è¾¾å¼é”™è¯¯
+        else
+        {
+            TreeNode* p = t->child[1];
+//            å¤„ç†thenè¯­å¥åºåˆ—éƒ¨åˆ†
+            while (p != NULL)
+            {
+                statement(p);
+                p = p->sibling;
+            }
+            t = t->child[2];        //å¿…æœ‰ä¸‰å„¿å­
+//            å¤„ç†elseè¯­å¥ä¸åˆ†
+            while (t != NULL)
+            {
+                statement(t);
+                t = t->sibling;
+            }
+        }
 }
 
 
-/************************************************************/
-/* º¯ÊýÃû  whilestatement                                   */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦ÀíÑ­»·Óï¾ä·ÖÎö                           */
-/* Ëµ  Ã÷  ·ÖÎöÓï·¨Ê÷µÄÁ½¸ö¶ù×Ó½Úµã                         */
-/************************************************************/
+
+/// å¤„ç†å¾ªçŽ¯è¯­å¥åˆ†æž
+///
+/// åˆ†æžè¯­æ³•æ ‘çš„ä¸¤ä¸ªå„¿å­èŠ‚ç‚¹
+/// @param t <#t description#>
 void whilestatement(TreeNode* t)
 {
-	TypeIR* Etp = Expr(t->child[0], NULL);
-	if (Etp != NULL)
-		/*´¦ÀíÌõ¼þ±í´ïÊ½²¿·Ö*/
-		if (Etp->kind != boolTy)
-			ErrorPrompt(t->lineno, (char*)"", (char*)"condition expression error!\n");  /*Âß¼­±í´ïÊ½´íÎó*/
-		else
-		{
-			t = t->child[1];
-			/*´¦ÀíÑ­»·²¿·Ö*/
-			while (t != NULL)
-			{
-				statement(t);
-				t = t->sibling;
-			}
-		}
+    TypeIR* Etp = Expr(t->child[0], NULL);
+    if (Etp != NULL)
+//        å¤„ç†æ¡ä»¶è¡¨è¾¾å¼éƒ¨åˆ†
+        if (Etp->kind != boolTy)
+            ErrorPrompt(t->lineno, (char*)"", (char*)"condition expression error!\n");
+//    é€»è¾‘è¡¨è¾¾å¼é”™è¯¯
+        else
+        {
+            t = t->child[1];
+//            å¤„ç†å¾ªçŽ¯éƒ¨åˆ†
+            while (t != NULL)
+            {
+                statement(t);
+                t = t->sibling;
+            }
+        }
 }
 
-
-/************************************************************/
-/* º¯ÊýÃû  readstatement                                    */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦ÀíÊäÈëÓï¾ä·ÖÎö                           */
-/* Ëµ  Ã÷  ·ÖÎöÓï·¨Ê÷½Úµã£¬¼ì²é±äÁ¿ÓÐÎÞÉùÃ÷ºÍÊÇ·ñÎª±äÁ¿´íÎó */
-/************************************************************/
+/// å¤„ç†è¾“å…¥è¯­å¥åˆ†æž
+///
+///åˆ†æžè¯­æ³•æ ‘èŠ‚ç‚¹ï¼Œæ£€æŸ¥å˜é‡æœ‰æ— å£°æ˜Žå’Œæ˜¯å¦ä¸ºå˜é‡é”™è¯¯
+/// @param t <#t description#>
 void readstatement(TreeNode* t)
 {
-	SymbTable* entry = NULL;
-	int present = FALSE;
+    SymbTable* entry = NULL;
+    int present = FALSE;
 
-	/*ÓÃid¼ì²éÕû¸ö·ûºÅ±í*/
-	present = FindEntry(t->name[0], &entry);
-	t->table[0] = entry;
+//    ç”¨idæ£€æŸ¥æ•´ä¸ªç¬¦å·è¡¨
+    present = FindEntry(t->name[0], &entry);
+    t->table[0] = entry;
 
-	/*Î´²éµ½±íÊ¾±äÁ¿ÎÞÉùÃ÷*/
-	if (present == FALSE)
-		ErrorPrompt(t->lineno, t->name[0], (char*)" is not declarationed!\n");
-	else
-		/*²»ÊÇ±äÁ¿±êÊ¶·û´íÎó*/
-		if (entry->attrIR.kind != varKind)
-			ErrorPrompt(t->lineno, t->name[0], (char*)"is not var name!\n ");
+//    æœªæŸ¥åˆ°è¡¨ç¤ºå˜é‡æ— å£°æ˜Ž
+    if (present == FALSE)
+        ErrorPrompt(t->lineno, t->name[0], (char*)" is not declarationed!\n");
+    else
+//        ä¸æ˜¯å˜é‡æ ‡è¯†ç¬¦é”™è¯¯
+        if (entry->attrIR.kind != varKind)
+            ErrorPrompt(t->lineno, t->name[0], (char*)"is not var name!\n ");
 }
 
-/************************************************************/
-/* º¯ÊýÃû  writestatement                                   */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦ÀíÊä³öÓï¾ä·ÖÎö                           */
-/* Ëµ  Ã÷  ·ÖÎöÊä³öÓï¾äÖÐµÄ±í´ïÊ½ÊÇ·ñºÏ·¨                   */
-/************************************************************/
+
+/// å¤„ç†è¾“å‡ºè¯­å¥åˆ†æž
+///
+/// åˆ†æžè¾“å‡ºè¯­å¥ä¸­çš„è¡¨è¾¾å¼æ˜¯å¦åˆæ³•
+/// @param t <#t description#>
 void writestatement(TreeNode* t)
 {
-	TypeIR* Etp = Expr(t->child[0], NULL);
-	if (Etp != NULL)
-		/*Èç¹û±í´ïÊ½ÀàÐÍÎªboolÀàÐÍ£¬±¨´í*/
-		if (Etp->kind == boolTy)
-			ErrorPrompt(t->lineno, (char*)"", (char*)"exprssion type error!");
+    TypeIR* Etp = Expr(t->child[0], NULL);
+    if (Etp != NULL)
+        /*å¦‚æžœè¡¨è¾¾å¼ç±»åž‹ä¸ºboolç±»åž‹ï¼ŒæŠ¥é”™*/
+        if (Etp->kind == boolTy)
+            ErrorPrompt(t->lineno, (char*)"", (char*)"exprssion type error!");
 }
 
 
-/************************************************************/
-/* º¯ÊýÃû  returnstatement                                  */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦Àíº¯Êý·µ»ØÓï¾ä·ÖÎö                       */
-/* Ëµ  Ã÷  ·ÖÎöº¯Êý·µ»ØÓï¾äÊÇ·ñÔÚÖ÷³ÌÐòÖÐ³öÏÖ               */
-/************************************************************/
+/// è¯¥å‡½æ•°å¤„ç†å‡½æ•°è¿”å›žè¯­å¥åˆ†æž
+///
+/// åˆ†æžå‡½æ•°è¿”å›žè¯­å¥æ˜¯å¦åœ¨ä¸»ç¨‹åºä¸­å‡ºçŽ°
+/// @param t <#t description#>
 void returnstatement(TreeNode* t)
 {
-	if (Level == 0)
-		/*Èç¹û·µ»ØÓï¾ä³öÏÖÔÚÖ÷³ÌÐòÖÐ£¬±¨´í*/
-		ErrorPrompt(t->lineno, (char*)"", (char*)"return statement error!");
+    if (Level == 0)
+        /*å¦‚æžœè¿”å›žè¯­å¥å‡ºçŽ°åœ¨ä¸»ç¨‹åºä¸­ï¼ŒæŠ¥é”™*/
+        ErrorPrompt(t->lineno, (char*)"", (char*)"return statement error!");
 }
 
-/************************************************************/
-/* º¯ÊýÃû  analyze                                          */
-/* ¹¦  ÄÜ  ¸Ãº¯Êý´¦Àí×ÜµÄÓïÒå·ÖÎö                           */
-/* Ëµ  Ã÷  ¶ÔÓï·¨Ê÷½øÐÐ·ÖÎö                                 */
-/************************************************************/
+
+/// å¤„ç†æ€»çš„è¯­ä¹‰åˆ†æž
+///
+///å¯¹è¯­æ³•æ ‘è¿›è¡Œåˆ†æž
+/// @param t <#t description#>
 void analyze(TreeNode* t)
 {
-	SymbTable* entry = NULL;
-	TreeNode* p = NULL;
-	TreeNode* pp = t;
+    SymbTable* entry = NULL;
+    TreeNode* p = NULL;
+    TreeNode* pp = t;
 
-	/*´´½¨·ûºÅ±í*/
-	CreatTable();
+//    åˆ›å»ºç¬¦å·è¡¨
+    CreatTable();
 
-	/*µ÷ÓÃÀàÐÍÄÚ²¿±íÊ¾³õÊ¼»¯º¯Êý*/
-	initialize();
+//    è°ƒç”¨ç±»åž‹å†…éƒ¨è¡¨ç¤ºåˆå§‹åŒ–å‡½æ•°
+    initialize();
 
-	/*Óï·¨Ê÷µÄÉùÃ÷½Úµã*/
-	p = t->child[1];
-	while (p != NULL)
-	{
-		switch (p->nodekind)
-		{
-		case  TypeK:     TypeDecPart(p->child[0]);  break;
-		case  VarK:     VarDecPart(p->child[0]);   break;
-		case  ProcDecK:  procDecPart(p);        break;
-		default:
-			ErrorPrompt(p->lineno, (char*)"", (char*)"no this node kind in syntax tree!");
-			break;
-		}
-		p = p->sibling;/*Ñ­»·´¦Àí*/
-	}
+//    è¯­æ³•æ ‘çš„å£°æ˜ŽèŠ‚ç‚¹
+    p = t->child[1];
+    while (p != NULL)
+    {
+        switch (p->nodekind)
+        {
+        case  TypeK:     TypeDecPart(p->child[0]);  break;
+        case  VarK:     VarDecPart(p->child[0]);   break;
+        case  ProcDecK:  procDecPart(p);        break;
+        default:
+            ErrorPrompt(p->lineno, (char*)"", (char*)"no this node kind in syntax tree!");
+            break;
+        }
+        p = p->sibling;
+//        å¾ªçŽ¯å¤„ç†
+    }
 
-	/*³ÌÐòÌå*/
-	t = t->child[2];
-	if (t->nodekind == StmLK)
-		Body(t);
+//    ç¨‹åºä½“
+    t = t->child[2];
+    if (t->nodekind == StmLK)
+        Body(t);
 
-	/*³·Ïú·ûºÅ±í*/
-	if (Level != -1)
-		DestroyTable();
+//    æ’¤é”€ç¬¦å·è¡¨
+    if (Level != -1)
+        DestroyTable();
 
-	/*Êä³öÓïÒå´íÎó*/
-	if (Error == TRUE)
-		fprintf(listing, "\nÓïÒå´íÎó:\n");
-	/*Èç¹ûÎÞ´íÎó£¬ÔòÊä³öÌáÊ¾ÐÅÏ¢*/
-//	else
-//		fprintf(listing, "\n........ no error!\n");
+//    è¾“å‡ºè¯­ä¹‰é”™è¯¯
+    if (Error == TRUE)
+        fprintf(listing, "\nè¯­ä¹‰é”™è¯¯:\n");
+//    å¦‚æžœæ— é”™è¯¯ï¼Œåˆ™è¾“å‡ºæç¤ºä¿¡æ¯
 }
 
 
