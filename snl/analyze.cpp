@@ -1,4 +1,4 @@
-//
+//  语义分析实现
 //  analyze.cpp
 //  snl
 //
@@ -25,6 +25,57 @@ TypeIR* boolPtr = NULL;     //该指针一直指向布尔类型的内部表示
 
 TypeIR* arrayVar(TreeNode* t);//该函数用于处理数组类型变量
 TypeIR* recordVar(TreeNode* t);//该函数用于处理记录类型变量
+
+//MARK: - 语义分析主函数
+/// 语义分析主函数
+///
+///对语法树进行分析
+/// @param t <#t description#>
+void analyze(TreeNode* t)
+{
+    SymbTable* entry = NULL;
+    TreeNode* p = NULL;
+    TreeNode* pp = t;
+
+//    创建符号表
+    CreatTable();
+
+//    调用类型内部表示初始化函数
+    initialize();
+
+//    语法树的声明节点
+    p = t->child[1];
+    while (p != NULL)
+    {
+        switch (p->nodekind)
+        {
+        case  TypeK:     TypeDecPart(p->child[0]);  break;
+        case  VarK:     VarDecPart(p->child[0]);   break;
+        case  ProcDecK:  procDecPart(p);        break;
+        default:
+            ErrorPrompt(p->lineno, (char*)"", (char*)"no this node kind in syntax tree!");
+            break;
+        }
+        p = p->sibling;
+//        循环处理
+    }
+
+//    程序体
+    t = t->child[2];
+    if (t->nodekind == StmLK)
+        Body(t);
+
+//    撤销符号表
+    if (Level != -1)
+        DestroyTable();
+
+//    输出语义错误
+    if (Error == TRUE)
+        fprintf(listing, "\n语义错误:\n");
+}
+
+
+
 
 
 //MARK: - 类型处理
@@ -247,7 +298,7 @@ void TypeDecPart(TreeNode* t)
 
         if (present != FALSE)
         {
-            ErrorPrompt(t->lineno, t->name[0], (char*)"is repetation declared!\n");
+            ErrorPrompt(t->lineno, t->name[0], (char*)"标识符重复声明!\n");
             entry = NULL;
         }
         else
@@ -318,7 +369,7 @@ void  varDecList(TreeNode* t)
             present = Enter(t->name[i], &attrIr, &entry);
             if (present != FALSE)
             {
-                ErrorPrompt(t->lineno, t->name[i], (char*)" is defined repetation!\n");
+                ErrorPrompt(t->lineno, t->name[i], (char*)" 重复声明!\n");
             }
             else
                 t->table[i] = entry;
@@ -808,14 +859,6 @@ void assignstatement(TreeNode* t)
     }
 }
 
-/************************************************************/
-/* 函数名  callstatement                                    */
-/* 功  能  该函数                       */
-/* 说  明  函数调用语句的语义分析首先检查符号表求出其属性中 */
-/*         的Param部分（形参符号表项地址表），并用它检查形参*/
-/*         和实参之间的对应关系是否正确。                   */
-/************************************************************/
-
 
 /// 处理函数调用语句分析
 ///
@@ -973,56 +1016,6 @@ void returnstatement(TreeNode* t)
         /*如果返回语句出现在主程序中，报错*/
         ErrorPrompt(t->lineno, (char*)"", (char*)"return statement error!");
 }
-
-
-/// 处理总的语义分析
-///
-///对语法树进行分析
-/// @param t <#t description#>
-void analyze(TreeNode* t)
-{
-    SymbTable* entry = NULL;
-    TreeNode* p = NULL;
-    TreeNode* pp = t;
-
-//    创建符号表
-    CreatTable();
-
-//    调用类型内部表示初始化函数
-    initialize();
-
-//    语法树的声明节点
-    p = t->child[1];
-    while (p != NULL)
-    {
-        switch (p->nodekind)
-        {
-        case  TypeK:     TypeDecPart(p->child[0]);  break;
-        case  VarK:     VarDecPart(p->child[0]);   break;
-        case  ProcDecK:  procDecPart(p);        break;
-        default:
-            ErrorPrompt(p->lineno, (char*)"", (char*)"no this node kind in syntax tree!");
-            break;
-        }
-        p = p->sibling;
-//        循环处理
-    }
-
-//    程序体
-    t = t->child[2];
-    if (t->nodekind == StmLK)
-        Body(t);
-
-//    撤销符号表
-    if (Level != -1)
-        DestroyTable();
-
-//    输出语义错误
-    if (Error == TRUE)
-        fprintf(listing, "\n语义错误:\n");
-//    如果无错误，则输出提示信息
-}
-
 
 
 

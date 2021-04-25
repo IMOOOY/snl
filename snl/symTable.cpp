@@ -2,42 +2,27 @@
 //  symTable.cpp
 //  snl
 //
-//  Created by IMOOOY on 2021/4/26.
+//  Created by IMOOOY on 2021/4/10.
 //
 
-#include <stdio.h>
-
-/****************************************************/
-/* 文件 symbTable.cpp                                 */
-/* 说明 类PASCAL语言编译器符号表处理程序              */
-/* 主题 编译器结构:原理和实例                        */
-/****************************************************/
-
-/* 头文件globals.h定义了全局类型与变量 */
 #include "globals.h"
-
 #include "stdio.h"
-
 #include "string.h"
-
 #include "util.h"
 
 
 
 static void printTy(TypeIR* ty);
-
 static void printVar(SymbTable* entry);
-
 static void printProc(SymbTable* entry);
-
 //static void printTab(int tabnum);
 
 
-//MARK: - 符号表相关操作
+//MARK: - 符号表
 void CreatTable(void);
 void  DestroyTable();
 int  Enter(char* id, AttributeIR* attribP, SymbTable** entry);
-
+void  PrintOneLayer(int level);
 
 
 SymbTable* NewTable(void);
@@ -95,25 +80,28 @@ int  Enter(char* id, AttributeIR* attribP, SymbTable** entry)
     else
     {
         while (curentry != NULL)
+        //遍历当前符号表，查询本层是否有重复定义
         {
             prentry = curentry;
             result = strcmp(id, curentry->idName);
             if (result == 0)
             {
-                fprintf(listing, "标识符重复声明 !");
+//                fprintf(listing, "标识符 %s 重复声明!\n\n",id);
                 Error = TRUE;
                 present = TRUE;
-//                curentry = (prentry->next);
+//                exit(0);
             }
-            else
-                curentry = (prentry->next);
-        }   /*在该层符号表内检查是否有重复定义错误*/
+            curentry = (prentry->next);
+        }
 
         if (present == FALSE)
         {
             curentry = NewTable();
+            //建立新符号表项
             prentry->next = curentry;
         }
+        else
+            return present;
     }
 
     /*将标识符名和属性登记到表中*/
@@ -140,40 +128,108 @@ int  Enter(char* id, AttributeIR* attribP, SymbTable** entry)
     return present;
 }
 
-
-
-/**
- 打印记录类型的域表
-*/
-void   PrintFieldChain(fieldChain* currentP)
+/// 创建当前空符号表
+///
+/// 遇到新的无声明的标识符时创建新的空符号表
+/// @return 返回新符号表的指针，未创建成功则返回NULL
+SymbTable* NewTable(void)
 {
-    fprintf(listing, "\n--------------Field  chain--------------------\n");
-    fieldChain* t = currentP;
-    while (t != NULL)
-    { /*输出标识符名字*/
-        fprintf(listing, "%s:  ", t->id);
-        /*输出标识符的类型信息*/
 
-        switch (t->UnitType->kind)
-        {
-        case  intTy:  fprintf(listing, "intTy     ");   break;
-        case  charTy:    fprintf(listing, "charTy    ");  break;
-        case  arrayTy: fprintf(listing, "arrayTy   "); break;
-        case  recordTy:fprintf(listing, "recordTy  "); break;
-        default: fprintf(listing, "error  type!  "); break;
-        }
-        fprintf(listing, "off = %d\n", t->off);
+    SymbTable* table = (SymbTable*)malloc(sizeof(SymbTable));
 
-        t = t->Next;
+    if (table == NULL)
+    {
+        fprintf(listing, "内存溢出!");
+        Error = TRUE;
+        return table;
     }
+    table->next = NULL;
+    table->attrIR.kind = typeKind;
+    table->attrIR.idtype = NULL;
+    table->next = NULL;
+    table->attrIR.More.VarAttr.isParam = false;
+    return table;
 }
 
 
-/********************************************************/
-/* 函数名  PrintOneLayer                                */
-/* 功  能  打印符号表的一层                                */
-/* 说  明  有符号表打印函数PrintSymbTable调用            */
-/********************************************************/
+/// 查标识符的符号表
+/// @param id 查找标识符id的表项地址
+/// @param entry 返回符号表表项地址。
+/// @return 如果符号表里没有所找的id项,则返回present为0,则函数中的参数entry赋值为指向该表项地址的指针;否则,present赋值为1。
+int FindEntry(char* id, SymbTable** entry)
+{
+    int present = FALSE;    /*返回值，是否找到*/
+    int same = 1;         /*标识符名字比较结果*/
+    int lev = Level;        /*临时记录层数的变量*/
+
+    SymbTable* findentry = scope[lev];  //在当前层查找
+
+    while ((lev != -1) && (present != TRUE))
+    {
+        while ((findentry != NULL) && (present != TRUE))
+        {
+            same = strcmp(id, findentry->idName);
+            if (same == 0)
+                present = TRUE;
+            /*如果标识符名字相同，则返回TRUE*/
+            else
+                findentry = findentry->next;
+            /*如果没找到，则继续链表中的查找*/
+        }
+        
+        //本层中没有查到，转到上一个局部化区域中继续查找
+        if (present != TRUE)
+        {
+            lev = lev - 1;
+            findentry = scope[lev];
+        }
+    }
+    
+    //整个程序中未找到
+    if (present != TRUE)
+    {
+        (*entry) = NULL;
+    }
+    else
+        (*entry) = findentry;
+
+    return present;
+}
+
+
+
+/// 在域表中查找域名
+/// @param Id 要查找的标识符
+/// @param head 指向表头
+/// @param Entry 返回值，此域名在记录的域表中的位置
+/// @return bool类型，是否找到
+bool  FindField(char* Id, fieldChain* head, fieldChain** Entry)
+{
+    bool  present = false;
+    fieldChain* currentItem = head;//记录当前节点
+
+    while ((currentItem != NULL) && (present == false))
+    //遍历
+    {
+        if (strcmp(currentItem->id, Id) == 0)
+        {
+            present = true;
+            if (Entry != NULL)
+            {
+                (*Entry) = currentItem;
+                //FIXME: 加break
+                break;
+            }
+        }
+        else  currentItem = currentItem->Next;
+    }
+
+    return(present);
+}
+
+
+/// 打印符号表的一层
+/// @param level 要打印的层数
 void  PrintOneLayer(int level)
 {
     SymbTable* t = scope[level];
@@ -221,17 +277,7 @@ void  PrintOneLayer(int level)
         t = t->next;
     }
 }
-
-
-
-
-
-
-/********************************************************/
-/* 函数名  PrintSymbTable                                */
-/* 功  能  打印生成的符号表                                */
-/* 说  明                                                */
-/********************************************************/
+/// 打印生成的符号表
 void   PrintSymbTable()
 { /*层数从0开始*/
     int  level = 0;
@@ -249,95 +295,7 @@ void   PrintSymbTable()
 
 
 
-
-
-
-
-
-
-
-/***********************************************************/
-/* 函数名 NewTable                                         */
-/* 功  能 创建当前空符号表                                 */
-/* 说  明 遇到新的无声明的标识符时创建新的空符号表，并返回 */
-/*          指向它的指针                                       */
-/***********************************************************/
-SymbTable* NewTable(void)
-{
-    /* 内存中动态申请分配单元，返回指向该单元的符号表类型指针t */
-    SymbTable* table = (SymbTable*)malloc(sizeof(SymbTable));
-
-    /* 符号表类型指针table为NULL,未能成功分配内存单元    *
-     * 将出错信息及行号lineno写入列表文件listing        */
-    if (table == NULL)
-    {
-        fprintf(listing, "Out of memory error !");
-        Error = TRUE;
-    }
-    table->next = NULL;
-
-    table->attrIR.kind = typeKind;
-    table->attrIR.idtype = NULL;
-    table->next = NULL;
-    table->attrIR.More.VarAttr.isParam = false;
-
-
-
-    /* 符号表类型指针table不是NULL,内存单元已经成功分配 */
-    return table;
-}
-
-
-//void printTable();
-
-
-
-
-/***********************************************************/
-/* 函数名 FindEntry                                        */
-/* 功  能 寻找表项地址                                     */
-/* 说  明 对给定的标识符id (id为字符串类型) 求出其表项地址,*/
-/*        并在entry的实参单元中返回表项地址。如果符号表里没*/
-/*          有所找的id项,则返回present为0,则函数中的参数entry*/
-/*        赋值为指向该表项地址的指针;否则,present赋值为1。 */
-/***********************************************************/
-int FindEntry(char* id, SymbTable** entry)
-{
-    int present = FALSE;    /*返回值*/
-    int result = 1;         /*标识符名字比较结果*/
-    int lev = Level;        /*临时记录层数的变量*/
-
-    SymbTable* findentry = scope[lev];
-
-    while ((lev != -1) && (present != TRUE))
-    {
-        while ((findentry != NULL) && (present != TRUE))
-        {
-            result = strcmp(id, findentry->idName);
-            if (result == 0)
-                present = TRUE;
-            /*如果标识符名字相同，则返回TRUE*/
-            else
-                findentry = findentry->next;
-            /*如果没找到，则继续链表中的查找*/
-        }
-        if (present != TRUE)
-        {
-            lev = lev - 1;
-            findentry = scope[lev];
-
-        }
-    }/*如果在本层中没有查到，则转到上一个局部化区域中继续查找*/
-    if (present != TRUE)
-    {
-        (*entry) = NULL;
-    }
-    else
-        (*entry) = findentry;
-
-    return present;
-}
-
+//MARK: -
 
 /***********************************************************/
 /* 函数名 FindAtrr                                         */
@@ -456,17 +414,19 @@ ParamTable* NewParam(void)
     return Ptr;
 }
 
-/***********************************************************/
-/* 函数名 ErrorPrompt                                      */
-/* 功  能 错误提示                                         */
-/* 说  明 在输出文件中显示错误提示，并给全局量Error赋值为1 */
-/***********************************************************/
+
+/// 错误提示
+///
+///在输出文件中显示错误提示，并给全局量Error赋值为1
+/// @param line 错误所在行号
+/// @param name 标识符
+/// @param message 错误信息
 void ErrorPrompt(int line, char* name, char* message)
 {
-    fprintf(listing, ">>>Line %d:, %s %s", line, name, message);
+    fprintf(listing, ">>>行 %d:, %s %s", line, name, message);
     Error = TRUE;
-    fprintf(listing, "\n\n===================================================================\n");
-    fprintf(listing, "Program ends\n");
+    fprintf(listing, "===================================================================\n");
+    fprintf(listing, "编译结束\n");
     fprintf(listing, "===================================================================\n");
     exit(0);
 }
@@ -481,203 +441,4 @@ void printTab(int tabnum)
 {
     for (int i = 0; i < tabnum; i++)
         fprintf(listing, " ");
-}
-
-
-/***********************************************************/
-/* 函数名  printTable                                      */
-/* 功  能  把符号表在输出文件中显示出来                    */
-/* 说  明  分层显示符号表内容，并在下面显示该符号的类型内部*/
-/*         表示                                            */
-/***********************************************************/
-/*void printTable(void)
-{
-    SymbTable * table = NULL;
-    TypeIR * tp = NULL;
-
-    //fprintf(listing,"\n symble table:\n\n");
-
-    /*while*if (scope[Level]!=NULL)
-    {
-        fprintf(listing,"\n------  level: %d  ------\n",Level);
-        table = scope[Level];
-        while (table!=NULL)
-        {
-            switch(table->attrIR.kind)
-            {
-            case typeKind:
-                fprintf(listing,"typeDec:\n");
-                printTab(5);
-                fprintf(listing,"name->%s;\n",table->idName);
-                printTab(5);
-                tp = table->attrIR.idtype;
-                if(tp!=NULL)
-                    printTy(tp);
-                else
-                    fprintf(listing,"type error!\n");
-                break;
-            case varKind:
-                fprintf(listing,"varDec:\n");
-                printTab(5);
-                printVar(table);
-                break;
-            case procKind:
-                fprintf(listing,"procDec:\n");
-                printTab(5);
-                printProc(table);
-                break;
-            }
-            table = table->next;
-        }
-    }
-}
-
-*/
-/***********************************************************/
-/* 函数名  printTy                                         */
-/* 功  能  把类型内部表示在输出文件中显示出来              */
-/* 说  明  显示其类型名，大小，及其他相关信息              */
-/***********************************************************/
-/*void printTy(TypeIR * ty)
-{
-    switch(ty->kind)
-    {
-    case intTy:
-        fprintf(listing,"kind->intTy;\n");
-        printTab(5);
-        fprintf(listing,"size->%d;\n",ty->size);
-        break;
-    case charTy:
-        fprintf(listing,"kind->charTy;\n");
-        printTab(5);
-        fprintf(listing,"size->%d;\n",ty->size);
-        break;
-    case arrayTy:
-        fprintf(listing,"kind->arrayTy;\n");
-        printTab(5);
-        fprintf(listing,"size->%d;\n",ty->size);
-        printTab(5);
-
-        if(ty->More.ArrayAttr.indexTy->kind==intTy)
-            fprintf(listing,"indextype->intTy;\n");
-        else
-            fprintf(listing,"indextype->charTy;\n");
-
-        printTab(5);
-        if(ty->More.ArrayAttr.elemTy->kind==intTy)
-            fprintf(listing,"elemtype->intTy;\n");
-        else
-            fprintf(listing,"elemtype->charTy;\n");
-        break;
-    case recordTy:
-        fprintf(listing,"kind->recordTy;\n");
-        printTab(5);
-        fprintf(listing,"size->%d;\n",ty->size);
-
-        fieldChain * tyBody = ty->More.body;
-        fprintf(listing,"\n");
-        printTab(3);
-        fprintf(listing,"field:\n");
-
-        while(tyBody!=NULL)
-        {
-            printTab(5);
-            fprintf(listing,"id->%s;\n",tyBody->id);
-            printTab(5);
-            fprintf(listing,"unit");
-            printTy(tyBody->UnitType);
-            printTab(5);
-            fprintf(listing,"off->%d;\n",tyBody->off);
-            tyBody = tyBody->Next;
-            fprintf(listing,"\n");
-        }
-        break;
-    }
-}
-*/
-/***********************************************************/
-/* 函数名  printVar                                        */
-/* 功  能  把变量内部表示在输出文件中显示出来              */
-/* 说  明  显示其变量名称，偏移，类型名及其他              */
-/***********************************************************/
-/*void printVar(SymbTable * entry)
-{
-    fprintf(listing,"name->%s;\n",entry->idName);
-
-    AttributeIR  attr = entry->attrIR;
-    printTab(5);
-    fprintf(listing,"level->%d;\n",attr.More.VarAttr.level);
-    printTab(5);
-    fprintf(listing,"off->%d;\n",attr.More.VarAttr.off);
-    printTab(5);
-    if(attr.More.VarAttr.isParam==true)
-        fprintf(listing,"param\n");
-    else
-        fprintf(listing,"not param\n");
-    printTab(5);
-    if(attr.More.VarAttr.access==dir)
-        fprintf(listing,"access->dir;\n");
-    else
-        fprintf(listing,"access->indir;\n");
-
-    printTab(5);
-    fprintf(listing,"\n");
-
-    if(entry->attrIR.idtype!=NULL)
-    {
-        printTab(5);
-        printTy(entry->attrIR.idtype);
-    }
-}
-
-
-*/
-/***********************************************************/
-/* 函数名  printProc                                       */
-/* 功  能  把过程内部表示在输出文件中显示出来              */
-/* 说  明  显示过程名，层数                                */
-/***********************************************************/
-/*void printProc(SymbTable * entry)
-{
-
-    SymbTable * entry0 = NULL;
-
-    fprintf(listing,"name->%s;\n",entry->idName);
-
-    AttributeIR  attr = entry->attrIR;
-    printTab(5);
-    fprintf(listing,"level->%d;\n",attr.More.ProcAttr.level);
-    ParamTable * ptable = attr.More.ProcAttr.param;
-    printTab(5);
-
-    fprintf(listing,"noff->%d; \n",entry->attrIR.More.ProcAttr.nOff);
-    printTab(5);
-    fprintf(listing,"moff->%d; \n",entry->attrIR.More.ProcAttr.mOff);
-}
-
-*/
-/********************************************************/
-/* 函数名  FindField                                      */
-/* 功  能  查找纪录的域名                                */
-/* 说  明  返回值为是否找到标志，变量Entry返回此域名在  */
-/*           纪录的域表中的位置.                            */
-/********************************************************/
-bool  FindField(char* Id, fieldChain* head, fieldChain** Entry)
-{
-    bool  present = false;
-    /*记录当前节点*/
-    fieldChain* currentItem = head;
-    /*从表头开始查找这个标识符，直到找到或到达表尾*/
-    while ((currentItem != NULL) && (present == false))
-    {
-        if (strcmp(currentItem->id, Id) == 0)
-        {
-            present = true;
-            if (Entry != NULL)
-                (*Entry) = currentItem;
-        }
-        else  currentItem = currentItem->Next;
-    }
-
-    return(present);
 }

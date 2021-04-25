@@ -81,9 +81,7 @@
 		66EF405B262E537000A71D81 /* snl */ = {
 			isa = PBXGroup;
 			children = (
-				6619B49A26359FCB00E1FE86 /* analyze.cpp */,
 				66EF4071262E574500A71D81 /* main.cpp */,
-				66EF406A262E574500A71D81 /* analyze.h */,
 				66EF4073262E574500A71D81 /* parse.cpp */,
 				66EF406B262E574500A71D81 /* parse.h */,
 				66EF4065262E574400A71D81 /* parseLL1.cpp */,
@@ -92,12 +90,14 @@
 				66EF406C262E574500A71D81 /* pch.h */,
 				66EF406D262E574500A71D81 /* scanner.cpp */,
 				66EF4072262E574500A71D81 /* scanner.h */,
-				66EF4067262E574500A71D81 /* symbTable.h */,
 				66EF406F262E574500A71D81 /* util.cpp */,
 				66EF4069262E574500A71D81 /* util.h */,
 				6619B49E2635AF4800E1FE86 /* globals.cpp */,
 				6619B49F2635AF4800E1FE86 /* globals.h */,
+				66EF4067262E574500A71D81 /* symbTable.h */,
 				66196ADA2635C9A9009312FC /* symTable.cpp */,
+				66EF406A262E574500A71D81 /* analyze.h */,
+				6619B49A26359FCB00E1FE86 /* analyze.cpp */,
 			);
 			path = snl;
 			sourceTree = "<group>";

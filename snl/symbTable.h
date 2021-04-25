@@ -33,19 +33,9 @@ void ErrorPrompt(int line, char* name, char* message);
 
 void printTab(int tabnum);
 
-//void printTable(void);
-
-//void printTy(TypeIR * ty);
-
-//void printVar(SymbTable * entry);
-
-//void printProc(SymbTable * entry);
-
 
 bool  FindField(char* Id, fieldChain* head, fieldChain** Entry);
 
-
-/*ºó¼ÓµÄ*/
 void   PrintFieldChain(fieldChain* currentP);
 
 void  PrintOneLayer(int level);

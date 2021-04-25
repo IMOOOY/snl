@@ -293,7 +293,7 @@ int main()
         fprintf(listing, "===================================================================\n");
 
         fprintf(listing, "语义错误信息：\n");
-        fprintf(listing, "...\n");
+
 
  
 //		fprintf(listing, "Checking  sematic  error......\n");
@@ -301,6 +301,7 @@ int main()
 		analyze(syntaxTree);
 		if (!Error)
         {
+            fprintf(listing, ">>>...\n");
 			fprintf(listing, ">>>无语义错误!\n");
             fprintf(listing, "===================================================================\n");
         }
