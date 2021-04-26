@@ -52,15 +52,9 @@ static int getNextChar(void)
         {
             
              
-            if (EchoSource) fprintf(listing, "%4d: %s", lineno, lineBuf);
-
-            
+                fprintf(listing, "%4d: %s", lineno, lineBuf);
             bufsize = strlen(lineBuf);
-
-            
             linepos = 0;
-
-            
             return lineBuf[linepos++];
 
         }
@@ -70,7 +64,6 @@ static int getNextChar(void)
              
             EOF_flag = TRUE;
 
-            
             return EOF;
         }
     }
