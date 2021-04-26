@@ -310,20 +310,6 @@ int main()
 			PrintSymbTable();
 //			getchar();
 		}
-        fprintf(listing, "\n===================================================================\n");
-        fprintf(listing, "回车进行下一步");
-        fprintf(listing, "\n===================================================================\n");
-        getchar();
-
-		/*输出含符号表信息的语法树*/
-		if ((TraceParse) && (!Error))
-		{
-//			fprintf(listing, "after  analysis ..");
-            fprintf(listing, "\n\n===================================================================\n");
-			fprintf(listing, "语法树如下:");
-            fprintf(listing, "\n===================================================================\n");
-			printTree(syntaxTree);
-		}
 	}
 
 #endif//结束NO_ANALYZE的条件编译
