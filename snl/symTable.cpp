@@ -83,10 +83,8 @@ int  Enter(char* id, AttributeIR* attribP, SymbTable** entry)
             result = strcmp(id, curentry->idName);
             if (result == 0)
             {
-//                fprintf(listing, "标识符 %s 重复声明!\n\n",id);
                 Error = TRUE;
                 present = TRUE;
-//                exit(0);
             }
             curentry = (prentry->next);
         }
@@ -225,6 +223,165 @@ bool  FindField(char* Id, fieldChain* head, fieldChain** Entry)
 }
 
 
+
+
+
+
+
+
+
+
+
+//MARK: -
+
+
+    
+/// 属性查询
+///
+/// 对给定表项地址，求出其属性值，并将其返回给Atrrib的实参单元中。
+/// @param entry 要查询的符号表项（表中某项位置的指针）
+/// @return entry的attrIr属性值
+AttributeIR FindAttr(SymbTable* entry)
+{
+    AttributeIR attrIr = entry->attrIR;
+    return attrIr;
+}
+
+
+/// 判断类型tp1和tp2是否相容
+///
+/// 类型相容等于类型等价，只需判断每个结构类型的内部表示产生的指针值是否相同即可。
+/// @param tp1 指向类型内部表示的指针
+/// @param tp2 指向类型内部表示的指针
+/// @return 等价为TRUE，不等为FALSE
+int   Compat(TypeIR* tp1, TypeIR* tp2)
+{
+    int  present;
+    if (tp1 != tp2)
+        present = FALSE;  /*类型不等*/
+    else
+        present = TRUE;   /*类型等价*/
+    return present;
+}
+    
+    
+/// 创建当前空类型内部表示
+/// @param kind 给出具体类型
+/// @return 该类型的内部表示的地址
+TypeIR* NewTy(TypeKind  kind)
+{
+    TypeIR* table = (TypeIR*)malloc(sizeof(TypeIR));
+    if (table == NULL)
+    {
+        fprintf(listing, "内存溢出!");
+        Error = TRUE;
+    }
+    else
+    {
+        switch (kind)
+        {
+        case intTy:
+        case charTy:
+        case boolTy:
+            table->kind = kind;
+            table->size = 1;
+            break;
+        case arrayTy:
+            table->kind = arrayTy;
+            table->More.ArrayAttr.indexTy = NULL;
+            table->More.ArrayAttr.elemTy = NULL;
+            break;
+        case recordTy:
+            table->kind = recordTy;
+            table->More.body = NULL;
+            break;
+        }
+    }
+    return table;
+}
+
+
+/// 创建当前空记录类型中域的链表
+///@return 该类型的新的链表的指针
+fieldChain* NewBody(void)
+{
+    fieldChain* Ptr = (fieldChain*)malloc(sizeof(fieldChain));
+
+    if (Ptr == NULL)
+    {
+        fprintf(listing, "内存不足！");
+        Error = TRUE;
+    }
+    else
+    {
+        Ptr->Next = NULL;
+        Ptr->off = 0;
+        Ptr->UnitType = NULL;
+    }
+    return Ptr;
+}
+
+
+/// 创建当前空形参链表
+/// @return 新申请的形参表指针
+ParamTable* NewParam(void)
+{
+    ParamTable* Ptr = (ParamTable*)malloc(sizeof(ParamTable));
+
+    if (Ptr == NULL)
+    {
+        fprintf(listing, "内存不足!");
+        Error = TRUE;
+    }
+    else
+    {
+        Ptr->entry = NULL;
+        Ptr->next = NULL;
+    }
+
+    return Ptr;
+}
+
+
+//MARK: - 信息输出，错误信息打印，符号表打印
+
+/// 错误提示
+///
+///在输出文件中显示错误提示，并给全局量Error赋值为1
+/// @param line 错误所在行号
+/// @param name 出错的单词名字
+/// @param message 错误提示信息
+void ErrorPrompt(int line, char* name, char* message)
+{
+    fprintf(listing, ">>>行 %d:, %s %s", line, name, message);
+    Error = TRUE;
+    fprintf(listing, "===================================================================\n");
+    fprintf(listing, "编译结束\n");
+    fprintf(listing, "===================================================================\n");
+    //产生错误直接结束
+    exit(0);
+}
+
+/// 打印空格
+/// @param tabnum 打印的空格数目
+void printTab(int tabnum)
+{
+    for (int i = 0; i < tabnum; i++)
+        fprintf(listing, " ");
+}
+
+void  PrintOneLayer(int level);
+/// 打印生成的符号表
+void   PrintSymbTable()
+{ /*层数从0开始*/
+    int  level = 0;
+    while (scope[level] != NULL)
+    {
+        PrintOneLayer(level);
+        level++;
+    }
+}
+
 /// 打印符号表的一层
 /// @param level 要打印的层数
 void  PrintOneLayer(int level)
@@ -274,131 +431,4 @@ void  PrintOneLayer(int level)
         t = t->next;
     }
 }
-/// 打印生成的符号表
-void   PrintSymbTable()
-{ /*层数从0开始*/
-    int  level = 0;
-    while (scope[level] != NULL)
-    {
-        PrintOneLayer(level);
-        level++;
-    }
-}
 
-
-
-
-
-
-
-
-//MARK: -
-
-
-
-
-/***********************************************************/
-/* 函数名 FindAtrr                                         */
-/* 功  能 属性查询                                         */
-/* 说  明 对给定表项地址，求出其属性值，并将其返回给Atrrib */
-/*        的实参单元中。                                   */
-/***********************************************************/
-AttributeIR FindAttr(SymbTable* entry)
-{
-    AttributeIR attrIr = entry->attrIR;
-    return attrIr;
-}
-
-
-/***********************************************************/
-/* 函数名 Compat                                           */
-/* 功  能 判断类型是否相容                                 */
-/* 说  明 由于TINY语言中只有整数类型、字符类型、数组类型和 */
-/*        记录类型，故类型相容等于类型等价，只需判断每个结 */
-/*        构类型的内部表示产生的指针值是否相同即可。       */
-/***********************************************************/
-int   Compat(TypeIR* tp1, TypeIR* tp2)
-{
-    int  present;
-    if (tp1 != tp2)
-        present = FALSE;  /*类型不等*/
-    else
-        present = TRUE;   /*类型等价*/
-    return present;
-}
-
-
-/***********************************************************/
-/* 函数名 NewBody                                          */
-/* 功  能 创建当前空记录类型中域的链表                     */
-/* 说  明 函数返回该类型的新的链表的单元地址               */
-/***********************************************************/
-fieldChain* NewBody(void)
-{
-    fieldChain* Ptr = (fieldChain*)malloc(sizeof(fieldChain));
-
-    if (Ptr == NULL)
-    {
-        fprintf(listing, "Out of memory error !");
-        Error = TRUE;
-    }
-    else
-    {
-        Ptr->Next = NULL;
-        Ptr->off = 0;
-        Ptr->UnitType = NULL;
-    }
-    return Ptr;
-}
-
-/***********************************************************/
-/* 函数名 NewParam                                           */
-/* 功  能 创建当前空形参链表                               */
-/* 说  明 函数返回新申请的单元地址                         */
-/***********************************************************/
-ParamTable* NewParam(void)
-{
-    ParamTable* Ptr = (ParamTable*)malloc(sizeof(ParamTable));
-
-    if (Ptr == NULL)
-    {
-        fprintf(listing, "Out of memory error !");
-        Error = TRUE;
-    }
-    else
-    {
-        Ptr->entry = NULL;
-        Ptr->next = NULL;
-    }
-
-    return Ptr;
-}
-
-
-/// 错误提示
-///
-///在输出文件中显示错误提示，并给全局量Error赋值为1
-/// @param line 错误所在行号
-/// @param name 标识符
-/// @param message 错误信息
-void ErrorPrompt(int line, char* name, char* message)
-{
-    fprintf(listing, ">>>行 %d:, %s %s", line, name, message);
-    Error = TRUE;
-    fprintf(listing, "===================================================================\n");
-    fprintf(listing, "编译结束\n");
-    fprintf(listing, "===================================================================\n");
-    exit(0);
-}
-
-
-/***********************************************************/
-/* 函数名 printTab                                         */
-/* 功  能 打印空格                                         */
-/* 说  明 在输出文件中打印个数为参数tabnum的空格           */
-/***********************************************************/
-void printTab(int tabnum)
-{
-    for (int i = 0; i < tabnum; i++)
-        fprintf(listing, " ");
-}

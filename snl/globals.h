@@ -215,7 +215,7 @@ typedef struct treeNode
     ///子节点child[1]指向声明体部分
     ///
     ///子节点child[2]指向函数的语句部分
-    struct treeNode* child[MAXCHILDREN];        /*    */
+    struct treeNode* child[MAXCHILDREN];
     struct treeNode* sibling;                    /* 兄弟节点指针    */
     int lineno;                                /* 源代码行号    */
     ///语法树根节点ProK,程序头结点PheadK，声明类型节点DecK,标志子结点都是类型声明的结点TypeK,标志子结点都是变量声明的结点VarK,函数声明结点FuncDecK,语句序列节点StmLK,语句声明结点StmtK,表达式结点ExpK
@@ -375,10 +375,14 @@ typedef  enum { dir, indir }AccessKind;
 
 //MARK:形参表ParamTable的结构定义
 ///形参表的结构定义
+///
+///entry：symbtable*，指向该形参所在符号表中的地址入口
+///
+///next：paramTable* 形参表的下一项
 typedef struct  paramTable
 {
+    ///指向该形参所在符号表中的地址入口
     struct symbtable* entry;
-//    指向该形参所在符号表中的地址入口
     struct paramTable* next;
 }ParamTable;
 
@@ -388,37 +392,51 @@ typedef struct  paramTable
 ///标识符的内部表示中涉及到层数、偏移量、过程的存储大小和目标代码入口地址等内容
 typedef struct
 {
-    struct typeIR* idtype;          //指向标识符的类型内部表示
-    IdKind    kind;                 //标识符的类型
+    ///指向标识符的类型内部表示
+    struct typeIR* idtype;
+    ///标识符的类型
+    IdKind    kind;
+    
+    ///标识符的不同类型有不同的属性
     union
     {
+        ///变量标识符的属性
         struct
         {
-            AccessKind   access;    //变参或值参
+            ///变参或值参
+            AccessKind   access;
             int          level;
             int          off;
             
             //TODO: added
-            bool         isParam;   //参数或普通变量
-        }VarAttr;   /*变量标识符的属性*/
+            ///参数或普通变量
+            bool         isParam;
+        }VarAttr;
         
+        ///过程名标识符的属性
         struct
         {
-            int         level;     //该过程的层数
-            ParamTable* param;   //参数表
+            ///该过程的层数
+            int         level;
+            ///参数表
+            ParamTable* param;
             
             //FIXME: deleted
 //            int code;
 //            int size;
             
             //TODO: added
-            int         mOff;       //过程活动记录的大小
-            int         nOff;       //sp到display表的偏移量
-            int         procEntry;  //过程的入口地址
-            int         codeEntry;  //过程入口标号,用于中间代码生成
-        }ProcAttr;      //过程名标识符的属性
+            ///过程活动记录的大小
+            int         mOff;
+            //sp到display表的偏移量
+            int         nOff;
+            ///过程的入口地址
+            int         procEntry;
+            ///过程入口标号,用于中间代码生成
+            int         codeEntry;
+        }ProcAttr;
 
-    }More;//标识符的不同类型有不同的属性
+    }More;
 
 }AttributeIR;
 
@@ -435,8 +453,11 @@ typedef struct
  */
 typedef struct  symbtable
 {
-    char  idName[10];   /*!< idName */
+    ///标识符名
+    char  idName[10];
+    ///标识符信息项
     AttributeIR  attrIR;
+    ///符号表的下一个元素
     struct symbtable* next;
 }SymbTable;
 
@@ -469,13 +490,26 @@ typedef  enum { intTy, charTy, arrayTy, recordTy, boolTy }TypeKind;
 
 struct typeIR;
 
+/**
+ 域类型单元结构定义
+ 
+ id[10]：char   变量名
 
-///域类型单元结构定义
+ off：int 所在记录中的偏移
+ 
+ UnitType：typeIR*  域中成员的类型
+ 
+ Next：fieldchain*   下一项
+ */
 typedef struct fieldchain
 {
-    char   id[10];              /*变量名*/
-    int    off;                 /*所在记录中的偏移*/
-    struct typeIR* UnitType; /*域中成员的类型*/
+    ///变量名
+    char   id[10];
+    ///所在记录中的偏移
+    int    off;
+    ///域中成员的类型
+    struct typeIR* UnitType;
+    ///下一项
     struct fieldchain* Next;
 }fieldChain;
 

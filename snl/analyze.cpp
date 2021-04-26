@@ -50,18 +50,15 @@ void analyze(TreeNode* t)
         //只对含有变量标识符、类型标识符、和过程标识符的语法树节点进行处理
         switch (p->nodekind)
         {
-        case  TypeK:     TypeDecPart(p->child[0]);  break;
-                //类型标识符
-        case  VarK:     VarDecPart(p->child[0]);   break;
-                //变量标识符
-        case  ProcDecK:  procDecPart(p);        break;
-                //过程标识符
+        case  TypeK:     TypeDecPart(p->child[0]);  break;//类型标识符
+        case  VarK:     VarDecPart(p->child[0]);   break;//变量标识符
+        case  ProcDecK:  procDecPart(p);        break;//过程标识符
         default:
             ErrorPrompt(p->lineno, (char*)"", (char*)"节点类型不存在!");
             break;
         }
         p = p->sibling;
-//        循环处理
+//        遍历所有节点
     }
 
 //    声明体部分
@@ -72,19 +69,16 @@ void analyze(TreeNode* t)
 //    撤销符号表
     if (Level != -1)
         DestroyTable();
-
-//    输出语义错误
-    if (Error == TRUE)
-        fprintf(listing, "\n语义错误:\n");
 }
 
 
-//MARK:- 初始化基本类型内部表示函数initialize
+//MARK:-
 ///初始化基本类型内部表示
 ///
 ///初始化整数类型，字符类型，布尔类型的内部表示，三种类型均为基本类型，内部表示固定
 void initialize(void)
 {
+    //MARK:初始化基本类型内部表示函数
     intPtr = NewTy(intTy);
     charPtr = NewTy(charTy);
     boolPtr = NewTy(boolTy);
@@ -93,40 +87,7 @@ void initialize(void)
         scope[i] = NULL;
 }
 
-/// 初始化当前空类型内部表示
-/// @param kind 类型
-/// @return 该类型的内部表示的地址
-TypeIR* NewTy(TypeKind  kind)
-{
-    TypeIR* table = (TypeIR*)malloc(sizeof(TypeIR));
-    if (table == NULL)
-    {
-        fprintf(listing, "内存溢出!");
-        Error = TRUE;
-    }
-    else
-    {
-        switch (kind)
-        {
-        case intTy:
-        case charTy:
-        case boolTy:
-            table->kind = kind;
-            table->size = 1;
-            break;
-        case arrayTy:
-            table->kind = arrayTy;
-            table->More.ArrayAttr.indexTy = NULL;
-            table->More.ArrayAttr.elemTy = NULL;
-            break;
-        case recordTy:
-            table->kind = recordTy;
-            table->More.body = NULL;
-            break;
-        }
-    }
-    return table;
-}
+
 
 
 
@@ -232,11 +193,11 @@ TypeIR* arrayType(TreeNode* t)
 
 
 
-
-
-///@brief 处理记录类型的内部表示
+///@brief 处理记录类型语法树节点
 ///
 ///类型为记录类型时，是由记录体组成的。其内部节点需要包括3个信息:一是空间大小size；二是类型种类标志 recordTy;三是体部分的节点地址body。记录类型中的域名都是标识符的定义性出现，因此需要记录其属性。
+///
+///record类型主要用于数据的分组
 /// @param t 语法树节点
 /// @return 符号表中的该标识符的类型内部表示。
 TypeIR* recordType(TreeNode* t)
@@ -255,7 +216,7 @@ TypeIR* recordType(TreeNode* t)
 //        遍历所有节点
     {
 //        填写ptr2指向的内容节点
-//        此处循环是处理此种情况int a,b;
+//        处理情况int a,b;
         for (int i = 0; i < t->idnum; i++)
         {
 //            申请新的域类型单元结构Ptr2
@@ -266,7 +227,6 @@ TypeIR* recordType(TreeNode* t)
 //            填写Ptr2的各个成员内容
             strcpy(Ptr2->id, t->name[i]);
             Ptr2->UnitType = TypeProcess(t, t->kind.dec);
-
             Ptr2->Next = NULL;
 
 //            如果Ptr1!=Ptr2，那么将指针后移
@@ -283,7 +243,6 @@ TypeIR* recordType(TreeNode* t)
     }
 
 //    处理记录类型内部结构
-
 //    取Ptr2的off为最后整个记录的size*/
     Ptr->size = Ptr2->off + (Ptr2->UnitType->size);
 //    将域链链入记录类型的body部分*/
@@ -297,7 +256,7 @@ TypeIR* recordType(TreeNode* t)
 //MARK: - 声明的语义分析
 
 
-/// 处理类型声明的语义分析
+/// 类型声明部分分析处理
 ///
 ///遇到类型T时，构造其内部节点TPtr；对于"idname=T"构造符号表项；检查本层类型声明中是否有重复定义错误.
 /// @param t <#t description#>
@@ -333,20 +292,9 @@ void TypeDecPart(TreeNode* t)
 
 /// 处理变量声明的语义分析
 ///
-/// 调用变量处理分析函数
-/// @param t <#t description#>
-void VarDecPart(TreeNode* t)
-{
-    varDecList(t);
-}
-
-
-
-/// 处理变量声明的语义分析
-///
 /// 当遇到变量表识符id时，把id登记到符号表中；检查重复性定义；遇到类型时，构造其内部表示。
 /// @param t <#t description#>
-void  varDecList(TreeNode* t)
+void VarDecPart(TreeNode* t)
 {
     AttributeIR  attrIr;
     int present = FALSE;
@@ -370,7 +318,6 @@ void  varDecList(TreeNode* t)
                 attrIr.More.VarAttr.off = Off;
                 Off = Off + 1;
 //                如果是变参，则偏移加1
-
             }
             
             else
@@ -405,14 +352,14 @@ void  varDecList(TreeNode* t)
     if (Level == 0)
     {
         mainOff = Off;
-//        存储主程序AR的display表的偏移到全局变量
-//        StoreNoff = Off;s
+
     }
 //    如果不是主程序，则记录此时偏移，用于下面填写过程信息表的noff信息
     else
         savedOff = Off;
 
 }
+
 
 /// 处理过程声明的语义分析
 ///
@@ -586,7 +533,7 @@ void statement(TreeNode* t)
 ///
 /// 表达式语义分析的重点是检查运算分量的类型相容性，求表达式的类型。其中参数Ekind用来表示实参是变参还是值参。
 /// @param t <#t description#>
-/// @param Ekind <#Ekind description#>
+/// @param Ekind 表达式的类型
 TypeIR* Expr(TreeNode* t, AccessKind* Ekind)
 {
     int present = FALSE;
@@ -714,8 +661,9 @@ TypeIR* arrayVar(TreeNode* t)
             ErrorPrompt(t->lineno, t->name[0], (char*)"is not variable error!\n");
             Eptr = NULL;
         }
-        else    //Var0不是数组类型变量
-            if (FindAttr(entry).idtype != NULL)
+        //Var0不是数组类型变量
+        else if (FindAttr(entry).idtype != NULL)
+        {
                 if (FindAttr(entry).idtype->kind != arrayTy)
                 {
                     ErrorPrompt(t->lineno, t->name[0], (char*)"is not array variable error !\n");
@@ -739,6 +687,7 @@ TypeIR* arrayVar(TreeNode* t)
                     else
                         Eptr = entry->attrIR.idtype->More.ArrayAttr.elemTy;
                 }
+        }
     }
     else    //标识符无声明
         ErrorPrompt(t->lineno, t->name[0], (char*)"is not declarations!\n");
@@ -785,6 +734,7 @@ TypeIR* recordVar(TreeNode* t)
             {
                 Eptr0 = entry->attrIR.idtype;
                 currentP = Eptr0->More.body;
+                //遍历
                 while ((currentP != NULL) && (result != FALSE))
                 {
                     result = strcmp(t->child[0]->name[0], currentP->id);
@@ -794,6 +744,7 @@ TypeIR* recordVar(TreeNode* t)
                     else
                         currentP = currentP->Next;
                 }
+                //没找到
                 if (currentP == NULL)
                     if (result != FALSE)
                     {
@@ -810,14 +761,6 @@ TypeIR* recordVar(TreeNode* t)
         ErrorPrompt(t->lineno, t->name[0], (char*)"is not declarations!\n");
     return Eptr;
 }
-
-
-/************************************************************/
-/* 函数名  assignstatement                                  */
-/* 功  能  该函数                           */
-/* 说  明                                          */
-/************************************************************/
-
 
 /// 处理赋值语句分析
 ///
@@ -847,7 +790,7 @@ void assignstatement(TreeNode* t)
 //            id不是变量
             if (FindAttr(entry).kind != varKind)
             {
-                ErrorPrompt(child1->lineno, child1->name[0], (char*)"is not variable error!\n");
+                ErrorPrompt(child1->lineno, child1->name[0], (char*)"不是变量!\n");
                 Eptr = NULL;
             }
             else
@@ -857,17 +800,18 @@ void assignstatement(TreeNode* t)
             }
         }
         else    //标识符无声明
-            ErrorPrompt(child1->lineno, child1->name[0], (char*)"is not declarations!\n");
+            ErrorPrompt(child1->lineno, child1->name[0], (char*)"未声明!\n");
     }
     else
-//        Var0[E]的情形
     {
+        //        Var0[E]的情形   数组
         if (child1->attr.ExpAttr.varkind == ArrayMembV)
             Eptr = arrayVar(child1);
-        else    //Var0.id的情形
+        else    //Var0.id的情形  record
             if (child1->attr.ExpAttr.varkind == FieldMembV)
                 Eptr = recordVar(child1);
     }
+    
     if (Eptr != NULL)
     {
         if ((t->nodekind == StmtK) && (t->kind.stmt == AssignK))
@@ -875,7 +819,7 @@ void assignstatement(TreeNode* t)
 //            检查是不是赋值号两侧 类型等价
             ptr = Expr(child2, NULL);
             if (!Compat(ptr, Eptr))
-                ErrorPrompt(t->lineno, (char*)"", (char*)"ass_expression error!\n");
+                ErrorPrompt(t->lineno, (char*)"", (char*)"赋值语句等号两边类型不等价!\n");
         }
 //        赋值语句中不能出现函数调用
     }
@@ -956,7 +900,7 @@ void ifstatment(TreeNode* t)
                 p = p->sibling;
             }
             t = t->child[2];        //必有三儿子
-//            处理else语句不分
+//            处理else语句部分
             while (t != NULL)
             {
                 statement(t);
@@ -1036,7 +980,7 @@ void returnstatement(TreeNode* t)
 {
     if (Level == 0)
         /*如果返回语句出现在主程序中，报错*/
-        ErrorPrompt(t->lineno, (char*)"", (char*)"return statement error!");
+        ErrorPrompt(t->lineno, (char*)"", (char*)"return statement error!\n");
 }
 
 

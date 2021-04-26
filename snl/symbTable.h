@@ -1,11 +1,3 @@
-/****************************************************/
-/* 文件 symbTable.h									*/
-/* 说明 TINY编译器的符号表界面	            		*/
-/* 主题 编译器结构:原理和实例						*/
-/****************************************************/
-
-/* 判断联入标志,如该头文件已经联入则不再联入 */
-
 #ifndef _SYMBTABLE_H_
 #define _SYMBTABLE_H_
 
@@ -41,6 +33,7 @@ void   PrintFieldChain(fieldChain* currentP);
 void  PrintOneLayer(int level);
 
 void   PrintSymbTable();
+
 
 
 #endif

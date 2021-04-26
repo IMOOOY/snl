@@ -286,18 +286,12 @@ int main()
     fprintf(listing, "回车进行下一步");
     fprintf(listing, "\n===================================================================\n");
     getchar();
-
 	{
         fprintf(listing, "\n\n\n===================================================================\n");
         fprintf(listing, "语义分析：\n");
         fprintf(listing, "===================================================================\n");
-
         fprintf(listing, "语义错误信息：\n");
-
-
- 
-//		fprintf(listing, "Checking  sematic  error......\n");
-		/*语义分析*/
+        /*语义分析*/
 		analyze(syntaxTree);
 		if (!Error)
         {
