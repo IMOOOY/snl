@@ -11,13 +11,6 @@
 #include "util.h"
 
 
-
-//static void printTy(TypeIR* ty);
-//static void printVar(SymbTable* entry);
-//static void printProc(SymbTable* entry);
-//static void printTab(int tabnum);
-
-
 //MARK: - 符号表
 
 
