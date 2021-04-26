@@ -33,9 +33,7 @@ TypeIR* boolPtr = NULL;     //该指针一直指向布尔类型的内部表示
 /// @param t 语法树根节点
 void analyze(TreeNode* t)
 {
-//    SymbTable* entry = NULL;
     TreeNode* p = NULL;
-//    TreeNode* pp = t;
 
 //    创建一层新的符号表
     CreatTable();

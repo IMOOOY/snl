@@ -134,7 +134,7 @@ static void fieldvarMore(TreeNode* t);
 static void syntaxError(char* message)
 
 {
-	fprintf(listing, "\n>>> error :   ");
+	fprintf(listing, ">>> error :   ");
 	fprintf(listing, "Syntax error at line %d: %s\n", token.lineshow, message);
 	Error = TRUE;
 }
@@ -149,10 +149,10 @@ static void match(LexType expected)
 	}
 	else
 	{
-		syntaxError("not match error ");
+		syntaxError("not match error");
 		fprintf(listing, "'%s'\n", token.Sem);
 		ReadNextToken(&token);
-		exit(0);
+//		exit(0);
 	}
 
 }

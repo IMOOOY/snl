@@ -406,10 +406,7 @@ static void syntaxError(char* message)
 {
 	fprintf(listing, "\n>>> ");
 
-	
 	fprintf(listing, "Syntax error at line %d: %s", lineno, message);
-
-	
 	Error = TRUE;
 }
 
@@ -1542,39 +1539,23 @@ TreeNode* parseLL1()
 {
 
 	NontmlType  stacktopN;
-
 	TmlType     stacktopT;
-
-	
 	TreeNode* rootPointer = NULL;
-
 	int pnum = 0; //纪录选中的产生式编号
-
 	CreatLL1Table();
-
 	STACKEMPTY = TRUE;
-
-	
 	rootPointer = newRootNode();
-
-	
 	PushPA(&(rootPointer->child[2]));
 	PushPA(&(rootPointer->child[1]));
 	PushPA(&(rootPointer->child[0]));
-
 	Push(1, Program);
-
-	
 	gettoken(&currentToken);
 	lineno = currentToken.lineshow;
-
-
 	while (!(STACKEMPTY))
 	{
 		if (readStackflag() == 2) /*检测终极符是否匹配*/
 		{
 			stacktopT = readstackT();
-
 			if (stacktopT == currentToken.Lex)
 			{
 				Pop();
@@ -1604,9 +1585,7 @@ TreeNode* parseLL1()
 	}
 	if (currentToken.Lex != ENDFILE)
 		syntaxError("Code  ends  before  file \n");
-
 	return  rootPointer;
-
 }
 
 
