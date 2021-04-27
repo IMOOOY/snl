@@ -79,6 +79,7 @@ int main()
     fprintf(listing, "对 ｜%s｜ 进行编译", pgm);
     fprintf(listing, "\n===================================================================\n");
 
+    //MARK: scanner
     /* 调用词法分析函数，得到Token序列*/
     getTokenlist();
 
@@ -129,6 +130,7 @@ int main()
         printf( "\n===================================================================\n");
         scanf("%d", &ll1);
     }
+    //MARK: treenode
     TreeNode* syntaxTree;
     if(ll1==1)
     {
@@ -136,6 +138,8 @@ int main()
         /* 调用语法分析函数，生成语法分析树 */
         
         fprintf(listing, "\n\n\n===================================================================\n");
+        
+        //MARK: LL1
         syntaxTree = parseLL1();
 
         /* 如果语法分析追踪标志为TRUE且没有语法错误,
@@ -161,6 +165,7 @@ int main()
          * 调用语法分析函数,生成语法分析树    */
         
         fprintf(listing, "\n\n\n===================================================================\n");
+        //MARK: parse
         syntaxTree = parse();
 
         /* 如果语法分析追踪标志为TRUE且没有语法错误,
@@ -179,7 +184,9 @@ int main()
             fprintf(listing, "\n===================================================================\n");
         }
     }
-    if(!ERROR)
+    
+    
+    if(!Error)
     {
         fprintf(listing, "\n===================================================================\n");
         fprintf(listing, "回车进行下一步");
@@ -190,7 +197,7 @@ int main()
             fprintf(listing, "语义分析：\n");
             fprintf(listing, "===================================================================\n");
             fprintf(listing, "语义错误信息：\n");
-            /*语义分析*/
+            //MARK: analyze
             analyze(syntaxTree);
             if (!Error)
             {
@@ -207,7 +214,6 @@ int main()
                 fprintf(listing, "符号表如下：");
                 fprintf(listing, "\n===================================================================\n");
                 PrintSymbTable();
-    //            getchar();
             }
         }
     }
@@ -219,13 +225,11 @@ int main()
 
     getchar();
     fprintf(listing, ">>语法树空间释放.........\n");
-//    getchar();
 
     /*释放语法树空间*/
     if (syntaxTree != NULL)
     {
         freeTree(syntaxTree);
-//        fprintf(listing, ">>........\n");
     }
     /*释放符号表空间*/
     freeTable();
