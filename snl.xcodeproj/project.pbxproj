@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		66196ADB2635C9A9009312FC /* symTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 66196ADA2635C9A9009312FC /* symTable.cpp */; };
 		6619B49B26359FCB00E1FE86 /* analyze.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6619B49A26359FCB00E1FE86 /* analyze.cpp */; };
 		6619B4A02635AF4800E1FE86 /* globals.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6619B49E2635AF4800E1FE86 /* globals.cpp */; };
 		66EF4076262E574500A71D81 /* parseLL1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 66EF4065262E574400A71D81 /* parseLL1.cpp */; };
@@ -15,7 +16,6 @@
 		66EF407B262E574500A71D81 /* util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 66EF406F262E574500A71D81 /* util.cpp */; };
 		66EF407C262E574500A71D81 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 66EF4071262E574500A71D81 /* main.cpp */; };
 		66EF407D262E574500A71D81 /* parse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 66EF4073262E574500A71D81 /* parse.cpp */; };
-		66EF407E262E574500A71D81 /* symbTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 66EF4075262E574500A71D81 /* symbTable.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -31,6 +31,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		66196ADA2635C9A9009312FC /* symTable.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = symTable.cpp; sourceTree = "<group>"; };
 		6619B49A26359FCB00E1FE86 /* analyze.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = analyze.cpp; sourceTree = "<group>"; };
 		6619B49E2635AF4800E1FE86 /* globals.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = globals.cpp; sourceTree = "<group>"; };
 		6619B49F2635AF4800E1FE86 /* globals.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = globals.h; sourceTree = "<group>"; };
@@ -46,9 +47,8 @@
 		66EF406F262E574500A71D81 /* util.cpp */ = {isa = PBXFileReference; fileEncoding = 2147486000; lastKnownFileType = sourcecode.cpp.cpp; path = util.cpp; sourceTree = "<group>"; };
 		66EF4071262E574500A71D81 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 2147486000; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		66EF4072262E574500A71D81 /* scanner.h */ = {isa = PBXFileReference; fileEncoding = 2147486000; lastKnownFileType = sourcecode.c.h; path = scanner.h; sourceTree = "<group>"; };
-		66EF4073262E574500A71D81 /* parse.cpp */ = {isa = PBXFileReference; fileEncoding = 2147486000; lastKnownFileType = sourcecode.cpp.cpp; path = parse.cpp; sourceTree = "<group>"; };
+		66EF4073262E574500A71D81 /* parse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = parse.cpp; sourceTree = "<group>"; };
 		66EF4074262E574500A71D81 /* parseLL1.h */ = {isa = PBXFileReference; fileEncoding = 2147486000; lastKnownFileType = sourcecode.c.h; path = parseLL1.h; sourceTree = "<group>"; };
-		66EF4075262E574500A71D81 /* symbTable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = symbTable.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,9 +81,7 @@
 		66EF405B262E537000A71D81 /* snl */ = {
 			isa = PBXGroup;
 			children = (
-				6619B49A26359FCB00E1FE86 /* analyze.cpp */,
 				66EF4071262E574500A71D81 /* main.cpp */,
-				66EF406A262E574500A71D81 /* analyze.h */,
 				66EF4073262E574500A71D81 /* parse.cpp */,
 				66EF406B262E574500A71D81 /* parse.h */,
 				66EF4065262E574400A71D81 /* parseLL1.cpp */,
@@ -92,12 +90,14 @@
 				66EF406C262E574500A71D81 /* pch.h */,
 				66EF406D262E574500A71D81 /* scanner.cpp */,
 				66EF4072262E574500A71D81 /* scanner.h */,
-				66EF4075262E574500A71D81 /* symbTable.cpp */,
-				66EF4067262E574500A71D81 /* symbTable.h */,
 				66EF406F262E574500A71D81 /* util.cpp */,
 				66EF4069262E574500A71D81 /* util.h */,
 				6619B49E2635AF4800E1FE86 /* globals.cpp */,
 				6619B49F2635AF4800E1FE86 /* globals.h */,
+				66EF4067262E574500A71D81 /* symbTable.h */,
+				66196ADA2635C9A9009312FC /* symTable.cpp */,
+				66EF406A262E574500A71D81 /* analyze.h */,
+				6619B49A26359FCB00E1FE86 /* analyze.cpp */,
 			);
 			path = snl;
 			sourceTree = "<group>";
@@ -159,9 +159,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				66EF4076262E574500A71D81 /* parseLL1.cpp in Sources */,
+				66196ADB2635C9A9009312FC /* symTable.cpp in Sources */,
 				66EF407C262E574500A71D81 /* main.cpp in Sources */,
 				66EF4077262E574500A71D81 /* pch.cpp in Sources */,
-				66EF407E262E574500A71D81 /* symbTable.cpp in Sources */,
 				6619B49B26359FCB00E1FE86 /* analyze.cpp in Sources */,
 				66EF4079262E574500A71D81 /* scanner.cpp in Sources */,
 				6619B4A02635AF4800E1FE86 /* globals.cpp in Sources */,

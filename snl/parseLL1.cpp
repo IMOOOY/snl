@@ -1,13 +1,3 @@
-/****************************************************/
-/* 文件 parseLL1.cpp								*/
-/* 说明 类pascal编译器的语法分析器实现				*/
-/* 主题 编译器结构：原理和实例						*/
-/* 说明 采用LL1分析方法                             */
-/****************************************************/
-
-
-/***********  该文件所包含的头文件  ****************/
-
 #include "globals.h"	/* 该头文件定义了全局类与变量 */
 
 #include "util.h"		/* 该头文件定义了功能函数 */
@@ -19,72 +9,43 @@
 #include "parseLL1.h"	/* 该头文件定义了语法分析器界面 */
 
 
-/*当前单词*/
 TokenType  currentToken;
-/*当前单词行号，用于给出错误提示信息*/
 extern int  lineno;
-/*LL1分析表*/
 int LL1Table[TABLESIZE][TABLESIZE];
-/*纪录当前语法树节点*/
 TreeNode* currentP = NULL;
 
-/*为保存类型需要的临时变量*/
 DecKind* temp = NULL;
-/*保存当前指针，以便修改后，将其恢复*/
 TreeNode* saveP = NULL;
 
-/*纪录表达式中，未匹配的左括号数目*/
 int  expflag = 0;
 
-/*判断简单表达式处理结束，整个表达式是否处理结束标识*/
-/*当是条件表达式时，取假值，简单表达式时，取真值*/
-/*用于函数preocess84*/
 int  getExpResult = TRUE;
 
-/*仅用于数组变量，故初始化为假，遇到数组变量时，将其
-  改变为真，以便在函数process84中，即算术表达式结束时，
-  从语法树栈中弹出相应指针，将数组下标表达式的结构链入
-  节点中*/
+
 int  getExpResult2 = FALSE;
 
 
-/*符号栈顶指针*/
 StackNode* StackTop;
-/*栈空标志*/
 int STACKEMPTY;
 
-/*语法树栈顶指针*/
 StackNodePA* StackTopPA;
-/*栈空标志*/
 int  paSTACKEMPTY;
 
-/*操作符栈的栈顶指针*/
 StackNodeP* OpStackTop = NULL;
-/*操作符栈空标志*/
+
 int OpSTACKEMPTY = TRUE;
 
-/*操作数栈的栈顶指针*/
+
 StackNodeP* NumStackTop = NULL;
-/*操作数栈空标志*/
+
 int NumSTACKEMPTY = TRUE;
 
-
-
-/************<语法分析功能函数> **************/
-
-/********************************************************/
-/* 函数名  CreatLL1Table								*/
-/* 功  能  创建LL1分析表								*/
-/* 说  明  初始数组（表）中的每一项都为0；根据LL1文法   */
-/*         给数组赋值（填表）；填好后，若值为0，		*/
-/*         表示无产生式可选，其他，为选中的产生式  		*/
-/********************************************************/
 
 void CreatLL1Table()
 {
 	int i, j;
 
-	/*初始化LL1表元素*/
+	
 	for (i = 0; i < TABLESIZE; i++)
 		for (j = 0; j < TABLESIZE; j++)
 			LL1Table[i][j] = 0;
@@ -422,16 +383,11 @@ void CreatLL1Table()
 
 }
 
-/********************************************************************/
-/* 函数名 gettoken					     							*/
-/* 功  能 从Token序列中取出一个Token	                            */
-/* 说  明 从文件中存的Token序列中依次取一个单词，作为当前单词.      */
-/********************************************************************/
 int fpnum = 0;
 void gettoken(TokenType* p)
 {
 	FILE* fp2;
-	/*按只读方式打开文件*/
+	
 	fp2 = fopen("Tokenlist", "rb");
 	if (fp == NULL)
 	{
@@ -445,21 +401,12 @@ void gettoken(TokenType* p)
 }
 
 
-/********************************************************************/
-/* 函数名 syntaxError												*/
-/* 功  能 语法错误处理函数											*/
-/* 说  明 将函数参数message指定的错误信息格式化写入列表文件listing	*/
-/*		  设置错误追踪标志Error为TRUE								*/
-/********************************************************************/
 static void syntaxError(char* message)
 
 {
 	fprintf(listing, "\n>>> ");
 
-	/* 将出错行号lineno和语法错误信息message格式化写入文件listing */
 	fprintf(listing, "Syntax error at line %d: %s", lineno, message);
-
-	/* 设置错误追踪标志Error为TRUE,防止错误进一步传递 */
 	Error = TRUE;
 }
 
@@ -472,11 +419,7 @@ void process1()
 
 }
 
-/********************************************************************/
-/* 函数名 process2() 				     							*/
-/* 功  能 处理程序头，并生成程序头节点Phead.                        */
-/* 说  明 产生式为：PROGRAM  ProgramName							*/
-/********************************************************************/
+
 void process2()
 {
 	Push(1, ProgramName);
@@ -485,7 +428,7 @@ void process2()
 	TreeNode** t = PopPA();
 	currentP = newPheadNode();
 	(*t) = currentP;
-	/*程序头节点没有兄弟节点，下面的声明用用根节点的child[1]指向*/
+	
 
 }
 
@@ -518,11 +461,10 @@ void process7()
 	Push(2, TYPE);
 
 	TreeNode** t = PopPA();
-	currentP = newTypeNode();  /*生成Type作为标志的结点，它的子结点都是
-								 类型声明*/
-	(*t) = currentP;    /*头结点的兄弟结点指针指向此结点*/
-	PushPA(&((*currentP).sibling));  /* 压入指向变量声明节点的指针*/
-	PushPA(&((*currentP).child[0])); /*压入指向第一个类型声明节点的指针*/
+	currentP = newTypeNode();
+	(*t) = currentP;
+	PushPA(&((*currentP).sibling));
+	PushPA(&((*currentP).child[0]));
 }
 
 void process8()
@@ -534,11 +476,9 @@ void process8()
 	Push(1, TypeId);
 
 	TreeNode** t = PopPA();
-	currentP = newDecNode(); /*生成一个表示类型声明的结点，
-							   不添任何信息*/
+	currentP = newDecNode();
 
-	(*t) = currentP; /*若是第一个，则是Type类型的子结点指向当前结点，
-					   否则，是上一个类型声明的兄弟结点*/
+	(*t) = currentP;
 
 	PushPA(&((*currentP).sibling));
 }
@@ -566,8 +506,6 @@ void process12()
 {
 	Push(1, BaseType);
 
-	/*由于数组基类型的问题，这里不能直接用currentP->kind.dec=IntegerK;
-	  而应该这么做，以适应所有情形*/
 	temp = &(currentP->kind.dec);
 
 }
@@ -580,7 +518,7 @@ void process14()
 {
 	Push(2, ID);
 
-	/*声明的类型部分为类型标识符*/
+	
 	(*currentP).kind.dec = IdK;
 	strcpy(currentP->attr.type_name, currentToken.Sem);
 }
@@ -589,7 +527,7 @@ void process15()
 {
 	Push(2, INTEGER);
 
-	/*声明的类型部分为整数类型*/
+	
 	(*temp) = IntegerK;
 }
 
@@ -597,7 +535,7 @@ void process16()
 {
 	Push(2, CHAR);
 
-	/*声明的类型部分为子符类型*/
+	
 	(*temp) = CharK;
 }
 void process17()
@@ -619,7 +557,7 @@ void process19()
 	Push(2, LMIDPAREN);
 	Push(2, ARRAY);
 
-	/*声明的类型为数组类型*/
+	
 	(*currentP).kind.dec = ArrayK;
 	temp = &(currentP->attr.ArrayAttr.childtype);
 
@@ -628,14 +566,14 @@ void process20()
 {
 	Push(2, INTC);
 
-	/*存储数组的下届*/
+	
 	(*currentP).attr.ArrayAttr.low = atoi(currentToken.Sem);
 }
 void process21()
 {
 	Push(2, INTC);
 
-	/*存储数组的上届*/
+	
 	(*currentP).attr.ArrayAttr.up = atoi(currentToken.Sem);
 }
 void process22()
@@ -644,12 +582,11 @@ void process22()
 	Push(1, FieldDecList);
 	Push(2, RECORD);
 
-	/*声明的类型部分为记录类型*/
+	
 	(*currentP).kind.dec = RecordK;
 
-	saveP = currentP; /*压入当前节点，是为了处理完后回到当前节点，
-					  主要是为了变量声明部分标识符部分在后面，考虑*/
-	PushPA(&((*currentP).child[0]));
+	saveP = currentP;
+    PushPA(&((*currentP).child[0]));
 }
 void process23()
 {
@@ -659,10 +596,10 @@ void process23()
 	Push(1, BaseType);
 
 	TreeNode** t = PopPA();
-	currentP = newDecNode(); /*生成记录类型的下一个域，不添任何信息*/
+	currentP = newDecNode();
 	temp = (&(currentP->kind.dec));
-	(*t) = currentP; /*若是第一个，则是record类型的子结点指向当前结点，
-						否则，是上一个纪录域声明的兄弟结点*/
+	(*t) = currentP;
+					
 	PushPA(&((*currentP).sibling));
 
 }
@@ -675,16 +612,16 @@ void process24()
 	Push(1, ArrayType);
 
 	TreeNode** t = PopPA();
-	currentP = newDecNode(); /*生成记录类型的下一个域，不添任何信息*/
-	(*t) = currentP; /*若是第一个，则是record类型的子结点指向当前结点，
-					   否则，是上一个纪录域声明的兄弟结点*/
+	currentP = newDecNode();
+	(*t) = currentP;
+					 
 	PushPA(&((*currentP).sibling));
 
 }
 
 void process25()
 {
-	/*后面没有记录类型的下一个域了，恢复当前纪录类型节点的指针*/
+	
 	PopPA();
 	currentP = saveP;
 }
@@ -699,7 +636,7 @@ void process27()
 	Push(1, IdMore);
 	Push(2, ID);
 
-	/*纪录一个域中各个变量的语义信息*/
+	
 	strcpy(currentP->name[currentP->idnum], currentToken.Sem);
 	currentP->idnum++;
 }
@@ -727,11 +664,11 @@ void process32()
 	Push(1, VarDecList);
 	Push(2, VAR);
 
-	currentP = newVarNode();   /*生成一个标志变量声明的节点*/
+	currentP = newVarNode();
 	TreeNode** t = PopPA();
 	(*t) = currentP;
-	PushPA(&((*currentP).sibling));  /*压入指向函数声明的指针*/
-	PushPA(&((*currentP).child[0])); /*压入指向第一个变量声明节点的指针*/
+	PushPA(&((*currentP).sibling));
+	PushPA(&((*currentP).child[0]));
 }
 void process33()
 {
@@ -741,9 +678,9 @@ void process33()
 	Push(1, TypeName);
 
 	TreeNode** t = PopPA();
-	currentP = newDecNode();/*建立一个新的声明节点，这里表示变量声明*/
-	(*t) = currentP;       /*若是第一个节点，则变量声明的头指针指向它，
-							 否则它是前一个变量声明的后继*/
+	currentP = newDecNode();
+	(*t) = currentP;
+							
 	PushPA(&((*currentP).sibling));
 
 }
@@ -804,16 +741,15 @@ void process41()
 
 	PushPA(&(currentP->sibling));
 
-	PushPA(&(currentP->child[2])); /*指向语句序列*/
+	PushPA(&(currentP->child[2]));
 
-	PushPA(&(currentP->child[1]));  /*指向函数的声明部分*/
+	PushPA(&(currentP->child[1]));
 
-	PushPA(&(currentP->child[0]));  /*指向参数声明部分*/
+	PushPA(&(currentP->child[0]));
 }
 
 void process42()
-{   /*弹出过程节点的兄弟节点指针*/
-	//PopPA( );  /*为了统一处理，不能现在弹出*/
+{
 }
 
 void process43()
@@ -831,7 +767,7 @@ void process44()
 
 void process45()
 {
-	/*形参部分为空，弹出指向形参的指针*/
+	
 	PopPA();
 }
 
@@ -862,7 +798,7 @@ void process50()
 
 	TreeNode** t = PopPA();
 	currentP = newDecNode();
-	/*函数的参数类型是值类型*/
+	
 	currentP->attr.ProcAttr.paramt = valparamType;
 	(*t) = currentP;
 	PushPA(&(currentP->sibling));
@@ -877,7 +813,7 @@ void process51()
 
 	TreeNode** t = PopPA();
 	currentP = newDecNode();
-	/*函数的参数类型是变量类型*/
+	
 	currentP->attr.ProcAttr.paramt = varparamType;
 	(*t) = currentP;
 	PushPA(&(currentP->sibling));
@@ -917,13 +853,10 @@ void process57()
 	Push(1, StmList);
 	Push(2, BEGIN);
 
-	/*注意，若没有声明部分，则弹出的是程序或过程根节点中指向
-	  声明部分的指针child[1];若有声明部分，则弹出的是语句序列前
-	  的最后一个声明标识节点的兄弟指针；不管是哪种情况，都正好
-	  需要弹出语法树栈中的一个指针*/
+
 	PopPA();
 
-	/*建立语句序列标识节点*/
+	
 	TreeNode** t = PopPA();
 	currentP = newStmlNode();
 	(*t) = currentP;
@@ -964,7 +897,7 @@ void process62()
 	Push(1, LoopStm);
 
 	currentP = newStmtNode(WhileK);
-	//currentP->kind.stmt=;
+	
 
 	TreeNode** t = PopPA();
 	(*t) = currentP;
@@ -978,7 +911,7 @@ void process63()
 
 	TreeNode** t = PopPA();
 	currentP = newStmtNode(ReadK);
-	//currentP->kind.stmt=;
+	
 	(*t) = currentP;
 	PushPA(&currentP->sibling);
 
@@ -989,7 +922,7 @@ void process64()
 
 	TreeNode** t = PopPA();
 	currentP = newStmtNode(WriteK);
-	//currentP->kind.stmt=;
+	
 	(*t) = currentP;
 	PushPA(&currentP->sibling);
 
@@ -1000,7 +933,7 @@ void process65()
 
 	TreeNode** t = PopPA();
 	currentP = newStmtNode(ReturnK);
-	//currentP->kind.stmt=;
+	
 	(*t) = currentP;
 	PushPA(&currentP->sibling);
 
@@ -1013,12 +946,12 @@ void process66()
 
 	currentP = newStmtNode(AssignK);
 
-	/*赋值语句左部变量节点*/
+	
 	TreeNode* t = newExpNode(VariK);
 	strcpy(t->name[0], currentToken.Sem);
 	t->idnum++;
 
-	/*赋值语句的child[0]指向左部的变量节点*/
+	
 	currentP->child[0] = t;
 
 	TreeNode** t1 = PopPA();
@@ -1035,7 +968,7 @@ void process67()
 void process68()
 {
 	Push(1, CallStmRest);
-	/*过程调用语句左部是标识符变量，表示过程名*/
+	
 	currentP->child[0]->attr.ExpAttr.varkind = IdV;
 
 	currentP->kind.stmt = CallK;
@@ -1045,14 +978,14 @@ void process69()
 	Push(1, Exp);
 	Push(2, ASSIGN);
 	Push(1, VariMore);
-	/*压入指向赋值右部的指针*/
+	
 	PushPA(&(currentP->child[1]));
-	/*当前指针指向赋值左部*/
+	
 	currentP = currentP->child[0];
 
 	TreeNode* t = newExpNode(OpK);
 	t->attr.ExpAttr.op = END;
-	PushOp(t);  //操作符栈的栈底存入一个特殊的操作符作为标志
+	PushOp(t);
 }
 void process70()
 {
@@ -1108,7 +1041,7 @@ void process74()
 
 	TreeNode* t = newExpNode(OpK);
 	t->attr.ExpAttr.op = END;
-	PushOp(t);  //操作符栈的栈底存入一个特殊的操作符作为标志
+	PushOp(t);
 }
 void process75()
 {
@@ -1135,7 +1068,7 @@ void process78()
 
 	TreeNode* t = newExpNode(OpK);
 	t->attr.ExpAttr.op = END;
-	PushOp(t);  //操作符栈的栈底存入一个特殊的操作符作为标志
+	PushOp(t);
 }
 
 void process79()
@@ -1150,14 +1083,14 @@ void process80()
 }
 
 
-/*设定操作符的优先级，值越大优先级越高*/
+
 int  Priosity(LexType  op)
 {
 	int  pri = 0;
 	switch (op)
 	{
 	case END:
-		pri = -1; break;//栈底标识，优先级最低
+		pri = -1; break;
 	case LPAREN:
 		pri = 0;
 	case LT:
@@ -1177,7 +1110,7 @@ int  Priosity(LexType  op)
 	return  pri;
 }
 
-/*********************表达式部分************************/
+
 
 void process81()
 {
@@ -1186,7 +1119,7 @@ void process81()
 
 	TreeNode* t = newExpNode(OpK);
 	t->attr.ExpAttr.op = END;
-	PushOp(t);  //操作符栈的栈底存入一个特殊的操作符作为标志	
+	PushOp(t);
 
 	getExpResult = FALSE;
 }
@@ -1201,7 +1134,7 @@ void process82()
 
 	LexType  sTop = ReadOpStack();
 	while (Priosity(sTop) >= Priosity(currentToken.Lex))
-		/*如果操作符栈顶运算符的优先级高于或等于当前读到的操作符*/
+		
 	{
 		TreeNode* t = PopOp();
 		TreeNode* Rnum = PopNum();
@@ -1214,8 +1147,8 @@ void process82()
 	}
 
 	PushOp(currentP);
-	/*处理完关系操作符右部的表达式时，要弹语法树栈，故
-	  设置getExpResult为真*/
+	
+	
 	getExpResult = TRUE;
 }
 
@@ -1228,7 +1161,7 @@ void process83()
 void process84()
 {
 	if ((currentToken.Lex == RPAREN) && (expflag != 0))
-		//说明当前右括号是表达式中的一部分
+		
 	{
 		while (ReadOpStack() != LPAREN)
 		{
@@ -1240,7 +1173,7 @@ void process84()
 			t->child[0] = Lnum;
 			PushNum(t);
 		}
-		PopOp(); //弹出左括号
+		PopOp();
 		expflag--;
 	}
 	else
@@ -1257,14 +1190,14 @@ void process84()
 				t->child[0] = Lnum;
 				PushNum(t);
 			}
-			PopOp();//弹出栈底标志
+			PopOp();
 			currentP = PopNum();
 
 			TreeNode** t = PopPA();
 			(*t) = currentP;
 
-			/*处理完数组变量，标志恢复初始值假，
-			  遇到下一个数组下标表达式时，再将其设置为真值*/
+			
+			
 			if (getExpResult2 == TRUE)
 				getExpResult2 = FALSE;
 		}
@@ -1280,7 +1213,7 @@ void process85()
 	currentP->attr.ExpAttr.op = currentToken.Lex;
 	LexType  sTop = ReadOpStack();
 	while (Priosity(sTop) >= Priosity(currentToken.Lex))
-		/*如果操作符栈顶运算符的优先级高于或等于当前读到的操作符*/
+		
 	{
 		TreeNode* t = PopOp();
 		TreeNode* Rnum = PopNum();
@@ -1311,7 +1244,7 @@ void process88()
 
 	LexType  sTop = ReadOpStack();
 	while (Priosity(sTop) >= Priosity(currentToken.Lex))
-		/*如果操作符栈顶运算符的优先级高于或等于当前读到的操作符*/
+		
 	{
 		TreeNode* t = PopOp();
 		TreeNode* Rnum = PopNum();
@@ -1332,7 +1265,7 @@ void process89()
 	Push(2, LPAREN);
 
 	TreeNode* t = newExpNode(OpK);
-	t->attr.ExpAttr.op = currentToken.Lex; /*把左括号也压入栈中*/
+	t->attr.ExpAttr.op = currentToken.Lex;
 	PushOp(t);
 	expflag++;
 }
@@ -1343,7 +1276,7 @@ void process90()
 
 	TreeNode* t = newExpNode(ConstK);
 	t->attr.ExpAttr.val = atoi(currentToken.Sem);
-	/*常数节点入操作数栈*/
+	
 	PushNum(t);
 
 }
@@ -1361,14 +1294,13 @@ void process92()
 	currentP = newExpNode(VariK);
 	strcpy(currentP->name[0], currentToken.Sem);
 	currentP->idnum++;
-	/*变量节点入操作数栈*/
+	
 	PushNum(currentP);
 
 }
 
 void process93()
 {
-	/*标识符变量*/
 	currentP->attr.ExpAttr.varkind = IdV;
 }
 
@@ -1377,18 +1309,18 @@ void process94()
 	Push(2, RMIDPAREN);
 	Push(1, Exp);
 	Push(2, LMIDPAREN);
-	/*数组成员变量*/
+	
 	currentP->attr.ExpAttr.varkind = ArrayMembV;
 	PushPA(&currentP->child[0]);
 
-	/*要进入表达式处理，初始化操作符栈*/
-	//操作符栈的栈底存入一个特殊的操作符作为标志
+	
+	
 	TreeNode* t = newExpNode(OpK);
 	t->attr.ExpAttr.op = END;
 	PushOp(t);
 
-	/*要进入数组下标表达式处理，在函数process84处理中，要
-	  操作语法树栈，故将标志getExpResult2设置为真值*/
+	
+	
 	getExpResult2 = TRUE;
 
 
@@ -1398,7 +1330,7 @@ void process95()
 {
 	Push(1, FieldVar);
 	Push(2, DOT);
-	/*域成员变量*/
+	
 	currentP->attr.ExpAttr.varkind = FieldMembV;
 	PushPA(&currentP->child[0]);
 }
@@ -1408,7 +1340,7 @@ void process96()
 	Push(1, FieldVarMore);
 	Push(2, ID);
 
-	/*纪录域的成员*/
+	
 	currentP = newExpNode(VariK);
 	strcpy(currentP->name[0], currentToken.Sem);
 	currentP->idnum++;
@@ -1421,7 +1353,7 @@ void process96()
 
 void process97()
 {
-	/*域成员是标识符变量*/
+	
 	currentP->attr.ExpAttr.varkind = IdV;
 }
 
@@ -1430,18 +1362,18 @@ void process98()
 	Push(2, RMIDPAREN);
 	Push(1, Exp);
 	Push(2, LMIDPAREN);
-	/*域成员是数组变量*/
+	
 	currentP->attr.ExpAttr.varkind = ArrayMembV;
-	/*指向数组成员表达式*/
+	
 	PushPA(&currentP->child[0]);
 
-	//操作符栈的栈底存入一个特殊的操作符作为标志
+	
 	TreeNode* t = newExpNode(OpK);
 	t->attr.ExpAttr.op = END;
 	PushOp(t);
 
-	/*要进入数组下标表达式处理，在函数process84处理中，要
-	  操作语法树栈，故将标志getExpResult2设置为真值*/
+	
+	  
 	getExpResult2 = TRUE;
 }
 void process99()
@@ -1475,11 +1407,11 @@ void process104()
 }
 
 
-/****************************************************/
-/* 函数名  predict									*/
-/* 功  能  选择产生式函数							*/
-/* 说  明  										    */
-/****************************************************/
+
+
+
+
+
 void predict(int num)
 {
 	switch (num)
@@ -1603,49 +1535,27 @@ void predict(int num)
 	}
 }
 
-/****************************************************/
-/* 函数名  parseLL1									*/
-/* 功  能  LL1语法分析主函数						*/
-/* 说  明  										    */
-/****************************************************/
-
 TreeNode* parseLL1()
 {
 
 	NontmlType  stacktopN;
-
 	TmlType     stacktopT;
-
-	/*语法树的根节点*/
 	TreeNode* rootPointer = NULL;
-
 	int pnum = 0; //纪录选中的产生式编号
-
 	CreatLL1Table();
-
 	STACKEMPTY = TRUE;
-
-	/*指向整个语法树根节点的指针，由它得到语法树*/
 	rootPointer = newRootNode();
-
-	/*从这里开始进行语法分析和语法树的生成*/
 	PushPA(&(rootPointer->child[2]));
 	PushPA(&(rootPointer->child[1]));
 	PushPA(&(rootPointer->child[0]));
-
 	Push(1, Program);
-
-	/*取一个token*/
 	gettoken(&currentToken);
 	lineno = currentToken.lineshow;
-
-
 	while (!(STACKEMPTY))
 	{
 		if (readStackflag() == 2) /*检测终极符是否匹配*/
 		{
 			stacktopT = readstackT();
-
 			if (stacktopT == currentToken.Lex)
 			{
 				Pop();
@@ -1668,19 +1578,14 @@ TreeNode* parseLL1()
 
 			pnum = LL1Table[stacktopN][currentToken.Lex];
 			Pop();
-			//	if (0==pnum)
-			//	{	printf("no predict!\n");
-			//        printf("%d\n",stacktopN);
-			//	}
+
 			predict(pnum);
 
 		}
 	}
 	if (currentToken.Lex != ENDFILE)
 		syntaxError("Code  ends  before  file \n");
-
 	return  rootPointer;
-
 }
 
 

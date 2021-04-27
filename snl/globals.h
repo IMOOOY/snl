@@ -37,7 +37,7 @@
 /* MAXTOKENLEN为单词最大长度定义为40 */
 #define MAXTOKENLEN 40
 
-/*初始化符号表中变量的偏移*/
+///初始化符号表中变量的偏移
 #define INITOFF 7
 
 /* SCOPESIZE为符号表scope栈的大小*/
@@ -91,119 +91,230 @@ typedef struct  node
 
 
 
-/******************************************************
- ******************   语法分析树   ********************
- ******************************************************/
+//MARK: - 语法树
 
- /*语法树根节点ProK,程序头结点PheadK，声明类型节点DecK,
-   标志子结点都是类型声明的结点TypeK,标志子结点都是变量声明的结点VarK,
-   函数声明结点FuncDecK,语句序列节点StmLK,语句声明结点StmtK,
-   表达式结点ExpK*/
+ /**
+  语法树根节点ProK,程序头结点PheadK，声明类型节点DecK,
+  标志子结点都是类型声明的结点TypeK,标志子结点都是变量声明的结点VarK,
+  函数声明结点FuncDecK,语句序列节点StmLK,语句声明结点StmtK,
+  表达式结点ExpK
+  */
 typedef enum { ProK, PheadK, DecK, TypeK, VarK, ProcDecK, StmLK, StmtK, ExpK }
 NodeKind;
 
 
-/*声明类型Deckind 类型的枚举定义：
-  数组类型ArrayK,字符类型CharK,
-  整数类型IntegerK,记录类型RecordK,
-  以类型标识符作为类型的IdK*/
+/**
+ 声明类型Deckind 类型的枚举定义：
+ 
+ 数组类型ArrayK,
+ 
+ 字符类型CharK,
+  
+ 整数类型IntegerK,
+ 
+ 记录类型RecordK,
+  
+ 以类型标识符作为类型的IdK
+ */
 typedef enum { ArrayK, CharK, IntegerK, RecordK, IdK }  DecKind;
 
 
 
-/* 语句类型StmtKind类型的枚举定义:            *
- * 判断类型IfK,循环类型WhileK                *
- * 赋值类型AssignK,读类型ReadK              *
- * 写类型WriteK，函数调用类型CallK          */
+/**
+ 语句类型StmtKind类型的枚举定义
+ 
+ 判断类型IfK,循环类型WhileK，赋值类型AssignK
+ 
+ 读类型ReadK，写类型WriteK，函数调用类型CallK
+ 
+*/
 typedef enum { IfK, WhileK, AssignK, ReadK, WriteK, CallK, ReturnK } StmtKind;
 
 
-/* 表达式类型ExpKind类型的枚举定义:         *
- * 操作类型OpK,常数类型ConstK,变量类型VarK */
+/**
+ 表达式类型ExpKind类型的枚举定义:操作类型OpK,常数类型ConstK,变量类型VarK
+ */
 typedef enum { OpK, ConstK, VariK } ExpKind;
 
 
-/* 变量类型VarKind类型的枚举定义:           *
- * 标识符IdV,数组成员ArrayMembV,域成员FieldMembV*/
+/**
+ 变量类型VarKind类型的枚举定义:
+ 
+ 标识符IdV,数组成员ArrayMembV,域成员FieldMembV
+ */
 typedef enum { IdV, ArrayMembV, FieldMembV } VarKind;
 
 
-/* 类型检查ExpType类型的枚举定义:           *
- * 空Void,整数类型Integer,字符类型Char      */
+/**
+ 类型检查ExpType类型的枚举定义:
+ 
+ 空Void,整数类型Integer,字符类型Char
+ */
 typedef enum { Void, Integer, Boolean } ExpType;
 
-/* 参数类型ParamType类型的枚举定义：        *
- * 值参valparamType,变参varparamType        */
+/** 参数类型ParamType类型的枚举定义：
+ 
+ 值参valparamType,变参varparamType
+ */
 typedef enum { valparamType, varparamType } ParamType;
 
-/* 定义语法树节点的最大子节点数MAXCHILDRREN为3 */
-/* 过程声明部分的子节点child[0]指向参数部分，
-   子节点child[1]指向声明体部分，子节点child[2]
-   指向函数的语句部分；*/
+/**
+ 定义语法树节点的最大子节点数MAXCHILDRREN为3
+
+ 过程声明部分的子节点child[0]指向参数部分，子节点child[1]指向声明体部分，子节点child[2]指向函数的语句部分；
+ */
 #define MAXCHILDREN 3
 
    /*提前声明符号表结构*/
 struct symbtable;
 
-/********** 语法树节点treeNode类型 *********/
+
+//MARK: 语法树节点
+/**
+ @brief语法树节点treeNode类型
+ 
+ -  child[MAXCHILDREN] 子节点指针
+ 
+ -  sibling* 兄弟节点指针
+ 
+ -  lineno 源代码行号
+ 
+ -  nodekind 节点类型
+ 
+ -  kind 具体类型
+ 
+------DecKind dec;
+ 
+------StmtKind stmt;
+ 
+------ ExpKind exp;
+ 
+ - idnum       相同类型的变量个数
+ 
+ - name[10][10]      标识符的名称
+ 
+ - table[10]  与标志符对应的符号表地址，在语义分析阶段填入
+ 
+ -  attr 属性
+ 
+ ----ArrayAttr
+ 
+   ------------low     数组下界
+ 
+   ------------up         数组上界
+ 
+   ------------childtype   数组的子类型
+ 
+ ----ProcAttr     过程属性
+ 
+   ------------ ParamType paramt    过程的参数类型
+ 
+ ----  ExpAttr
+ 
+   ------------ LexType op     表达式的操作符
+ 
+   ------------val       表达式的值
+ 
+   ------------ VarKind varkind  变量的类别
+ 
+   ------------type  用于类型检查
+ 
+ ---- type_name[10]   类型名是标识符
+ */
 typedef struct treeNode
 
 {
-    struct treeNode* child[MAXCHILDREN];        /* 子节点指针    */
-    struct treeNode* sibling;                    /* 兄弟节点指针    */
-    int lineno;                                /* 源代码行号    */
-    NodeKind nodekind;                            /* 节点类型        */
+    ///子节点指针
+    ///
+    ///子节点child[0]指向参数部分
+    ///
+    ///子节点child[1]指向声明体部分
+    ///
+    ///子节点child[2]指向函数的语句部分
+    struct treeNode* child[MAXCHILDREN];
+    ///兄弟节点指针
+    struct treeNode* sibling;
+    ///源代码行号
+    int lineno;
+    ///节点类型
+    ///
+    ///语法树根节点ProK,程序头结点PheadK，声明类型节点DecK,标志子结点都是类型声明的结点TypeK,标志子结点都是变量声明的结点VarK,函数声明结点FuncDecK,语句序列节点StmLK,语句声明结点StmtK,表达式结点ExpK
+    NodeKind nodekind;
+    
+    
+    ///节点具体类型
     union
     {
+        ///声明类型
         DecKind  dec;
+        ///语句类型
         StmtKind stmt;
+        ///表达式类型
         ExpKind  exp;
-    } kind;                       /* 具体类型     */
-
-    int idnum;                    /* 相同类型的变量个数 */
-
-    char name[10][10];            /* 标识符的名称  */
-
-    struct symbtable* table[10]; /* 与标志符对应的符号表地址，在语义分析阶段填入*/
-
+    } kind;
+    
+    ///相同类型的变量个数
+    int idnum;
+    
+    
+    ///标识符的名称
+    char name[10][10];
+    
+    
+    ///与标志符对应的符号表地址，在语义分析阶段填入
+    struct symbtable* table[10];
+    
+    
+    /// 属性
     struct
     {
+        ///数组类型属性
         struct
         {
-            int low;              /* 数组下界     */
-            int up;               /* 数组上界     */
-            DecKind   childtype;  /* 数组的子类型 */
-        }ArrayAttr;               /* 数组属性     */
+            ///数组下界
+            int low;
+            ///数组上界
+            int up;
+            ///数组的子类型
+            DecKind   childtype;
+        }ArrayAttr;
 
+        ///过程属性
         struct
         {
-            ParamType  paramt;     /* 过程的参数类型*/
-        }ProcAttr;                 /* 过程属性      */
+            ///过程的参数类型
+            ParamType  paramt;
+        }ProcAttr;
 
+        ///表达式属性
         struct
         {
-            LexType op;           /* 表达式的操作符*/
-            int val;              /* 表达式的值       */
-            VarKind  varkind;     /* 变量的类别    */
-            ExpType type;         /* 用于类型检查  */
-        }ExpAttr;                  /* 表达式属性    */
+            ///表达式的操作符
+            LexType op;
+            ///表达式的值
+            int val;
+            ///变量的类别
+            VarKind  varkind;
+            ///用于类型检查
+            ExpType type;
+        }ExpAttr;
 
-        char type_name[10];             /* 类型名是标识符  */
+        ///类型名是标识符
+        char type_name[10];
 
-    } attr;                          /* 属性           */
+    } attr;
 }TreeNode;
 
-/*非终极符的总数*/
+///非终极符的总数
 #define  NTMLNUM    68
 
-/*终极符的总数*/
+///终极符的总数
 #define  TMLNUM     42
 
-/*LL1分析表的大小*/
+///LL1分析表的大小
 #define  TABLESIZE  104
 
-/******************类型和变量声明*********************/
-
+//MARK: - 类型和变量声明
 /* 1.进行LL1语法分析用到的类型及对应的变量  */
 
 /*所有非终极符，其各自含义可参考LL1文法*/
@@ -294,77 +405,108 @@ extern  int NumSTACKEMPTY;
 
 
 
-//MARK:- 语义分析需要用到的类型及变量定义
-
-
-//标识符的类型
-typedef  enum { typeKind, varKind, procKind }IdKind;
-
-//变量的类别。dir表直接变量(值参)，indir表示间接变量(变参)
-typedef  enum { dir, indir }AccessKind;
-
-//形参表的结构定义
-typedef struct  paramTable
-{
-    struct symbtable* entry;
-//    指向该形参所在符号表中的地址入口
-    struct paramTable* next;
-}ParamTable;
-
+//MARK:- 语义分析的类型及变量定义
 
 struct typeIR;
 
+/// 标识符的类型
+///
+/// 一个标识符的类别只可能 为 typeKind, varKind, procKind 其中之一
+typedef  enum {typeKind, varKind, procKind }IdKind;
 
+///变量的类别。dir表直接变量(值参)，indir表示间接变量(变参)
+typedef  enum { dir, indir }AccessKind;
 
-///标识符的属性结构定义
+//MARK:形参表ParamTable的结构定义
+///形参表的结构定义
+///
+///entry：symbtable*，指向该形参所在符号表中的地址入口
+///
+///next：paramTable* 形参表的下一项
+typedef struct  paramTable
+{
+    ///指向该形参所在符号表中的地址入口
+    struct symbtable* entry;
+    struct paramTable* next;
+}ParamTable;
+
+//MARK: 标识符信息项AttributeIR
+///标识符信息项
+///
+///标识符的内部表示中涉及到层数、偏移量、过程的存储大小和目标代码入口地址等内容
 typedef struct
 {
-    struct typeIR* idtype;          //    指向标识符的类型内部表示
-    IdKind    kind;                 //    标识符的类型
+    ///指向标识符的类型内部表示
+    struct typeIR* idtype;
+    ///标识符的类型
+    IdKind    kind;
+    
+    ///标识符的不同类型有不同的属性
     union
     {
+        ///变量标识符的属性
         struct
         {
-            AccessKind   access;    //判断是变参还是值参
+            ///变参或值参
+            AccessKind   access;
             int          level;
             int          off;
-            bool         isParam;   //判断是参数还是普通变量
-
-        }VarAttr;   //变量标识符的属性
+            
+            //TODO: added
+            ///参数或普通变量
+            bool         isParam;
+        }VarAttr;
+        
+        ///过程名标识符的属性
         struct
         {
-            int         level;     //该过程的层数
+            ///该过程的层数
+            int         level;
+            ///参数表
+            ParamTable* param;
+            
+            //FIXME: deleted
+//            int code;
+//            int size;
+            
+            //TODO: added
+            ///过程活动记录的大小
+            int         mOff;
+            //sp到display表的偏移量
+            int         nOff;
+            ///过程的入口地址
+            int         procEntry;
+            ///过程入口标号,用于中间代码生成
+            int         codeEntry;
+        }ProcAttr;
 
-            ParamTable* param;   //参数表
-
-            int         mOff;       //过程活动记录的大小
-
-            int         nOff;         //sp到display表的偏移量
-
-            int         procEntry; //过程的入口地址
-
-            int         codeEntry;//过程入口标号,用于中间代码生成
-
-        }ProcAttr;//过程名标识符的属性
-
-    }More;//标识符的不同类型有不同的属性
+    }More;
 
 }AttributeIR;
 
 
-
-///符号表的结构定义
+// MARK: 符号表SymbTable数据结构定义
+/**
+ 符号表的数据结构定义
+ 
+ idName: 标识符名
+ 
+ attrIR: 标识符信息项
+ 
+ next: 符号表的下一个元素
+ */
 typedef struct  symbtable
 {
+    ///标识符名
     char  idName[10];
+    ///标识符信息项
     AttributeIR  attrIR;
+    ///符号表的下一个元素
     struct symbtable* next;
-
 }SymbTable;
 
 ///使用scope栈的局部符号表方法中所用到的scope栈
 extern SymbTable* scope[1000];
-
 
 ///scope栈的层数
 extern int Level;
@@ -380,45 +522,94 @@ extern int savedOff;
 
 
 
-//MARK:类型内部表示
+//MARK: - 类型内部表示
 
- ///类型的枚举定义
+///类型的种类的枚举定义
+///
+///intTy, charTy, arrayTy, recordTy, boolTy
+///
+///SNL 的类型包括：整数类型，字符类型，数组类型，记录类型，布尔类型（其 中布尔类型只在判断条件表达式的值时使用）。其中整型和字符类型是标准类型，其 内部表示可以事先构造，数组和记录类型等构造类型则要在变量声明或类型声明时 构造。
 typedef  enum { intTy, charTy, arrayTy, recordTy, boolTy }TypeKind;
 
 
 struct typeIR;
 
-///域类型单元结构定义
+/**
+ 域类型单元结构定义
+ 
+ id[10]：char   变量名
+
+ off：int 所在记录中的偏移
+ 
+ UnitType：typeIR*  域中成员的类型
+ 
+ Next：fieldchain*   下一项
+ */
 typedef struct fieldchain
 {
-    char   id[10];              /*变量名*/
-    int    off;                 /*所在记录中的偏移*/
-    struct typeIR* UnitType; /*域中成员的类型*/
+    ///变量名
+    char   id[10];
+    ///所在记录中的偏移
+    int    off;
+    ///域中成员的类型
+    struct typeIR* UnitType;
+    ///下一项
     struct fieldchain* Next;
 }fieldChain;
 
 
-///类型的内部结构定义
+/**
+ @brief类型的内部结构定义
+
+ size  类型所占空间大小
+ 
+ kind 节点类型
+ 
+ more
+ 
+ --ArrayAttr
+
+ -----indexTy       指向数组下标类型的内部表示
+
+ -----elemTy        指向数组元素类型的内部表示，即指向证书或字符
+
+ -----iow       记录数组类型的下界
+
+ -----up        记录数组类型的上界
+ 
+ --body     记录类型中的域链
+ */
 typedef   struct  typeIR
 {
-    int                size;   /*类型所占空间大小*/
+    ///类型所占空间大小
+    int             size;
+    ///intTy, charTy, arrayTy, recordTy, boolTy
     TypeKind        kind;
     union
     {
+        ///数组类型的内部表示的额外内容
         struct
         {
+            ///指向数组下标类型的内部表示
             struct typeIR* indexTy;
+            ///指向数组元素类型的内部表示，即指向证书或字符
             struct typeIR* elemTy;
-            int    low;     /*记录数组类型的下界*/
-            int    up;      /*记录数组类型的上界*/
+            ///记录数组类型的下界
+            int    low;
+            ///记录数组类型的上界
+            int    up;
         }ArrayAttr;
-        fieldChain* body;  /*记录类型中的域链*/
+        ///记录类型中的域链
+        fieldChain* body;  
     } More;
 }TypeIR;
 
 
 
 
+
+
+//MARK: - 文件指针
 /* 源代码文本文件指针source */
 extern FILE* source;
 
@@ -442,12 +633,6 @@ extern int Level;
 
 /*在同层的变量偏移*/
 extern int Off;
-
-/*记录主程序的displayOff*/
-//extern int mainOff;
-
-/*记录当前层的displayOff*/
-//extern int savedOff;
 
 
 
