@@ -1,0 +1,36 @@
+program p
+type t1=integer;
+	t2=array[1..3] of char;
+	t3=record char a,b; integer c;array[1..3] of char d;
+	      end;
+	t4=t3;
+var integer v1,v2;
+	char v3;
+	t4 v4;
+	t1 v5;
+
+procedure q(integer i);
+type t5=integer;
+var t5 a;
+begin
+	a:=i;
+	write(a)
+end
+procedure qqqq(integer i);
+var integer b;
+begin
+	b:=i;
+	write(b)
+end
+
+begin
+	read(v1);
+	{Tihis is a comment
+	fhian klsd}
+	v1:=v1+1;
+	if v1<10
+		then v1:=v1+10
+		else v1:=v1-10
+	fi;
+	q(v1)
+end.
